@@ -1,0 +1,9 @@
+env/
+*.pyc
+launch.json
+settings.json
+.vscode/
+test_serv.py
+*~
+app/models.py
+app.wsgi
