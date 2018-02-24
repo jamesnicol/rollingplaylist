@@ -1,14 +1,12 @@
 from flask import Flask
-#from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
-app.secret_key = "spotify_app_key_change_me"
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///testdb.db'
-#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-#db = SQLAlchemy(app)
+app = Flask(__name__, instance_relative_config=True)
+db = SQLAlchemy(app)
 
+app.config.from_pyfile('config.py')
 
-from app import views#spotipy 
+from app import views, models 
 
 if __name__ == "__main__":
-  app.run(port=8080)
+    app.run(port=8080)
