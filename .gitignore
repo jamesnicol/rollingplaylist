@@ -5,6 +5,5 @@ settings.json
 .vscode/
 test_serv.py
 *~
-app/models.py
 app.wsgi
 instance/
