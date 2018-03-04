@@ -1,11 +1,14 @@
 from app import db
-
-class User(db.Model):
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+Base = declarative_base()
+class User(Base):
   """todo: write docstring for this class"""
-  id = db.Column(db.Integer, primary_key=True)
-  spotify_id = db.Column(db.String)
-  spotify_token = db.Column(db.String)
-  stale_period_days = db.Column(db.Integer)
+  __tablename__ = 'user_table'
+  id = Column(Integer, primary_key=True)
+  spotify_id = Column(String)
+  spotify_token = Column(String)
+  stale_period_days = Column(Integer)
 
   def __init__(self, spotify_id, token):
     self.spotify_id = spotify_id
@@ -13,6 +16,10 @@ class User(db.Model):
   
   def set_stale_period(self, days):
     self.stale_period_days = days
+
+def create_tables():
+  engine = create_engine('sqlite:///test.db')
+  Base.metadata.create_all(engine)
 
 #todo: put these functions into a class?
 # def addNewUser(email,name,password):
