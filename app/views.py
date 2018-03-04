@@ -2,7 +2,8 @@ import os
 import datetime
 from flask import Flask, redirect, url_for, session, request
 from flask_oauthlib.client import OAuth, OAuthException
-from app import app
+from app import app, Session
+from app.models import User, Playlist, Token
 
 SPOTIFY_APP_ID = app.config["SPOTIFY_APP_ID"]
 SPOTIFY_APP_SECRET = app.config["SPOTIFY_APP_SECRET"]
@@ -47,10 +48,21 @@ def spotify_authorized():
     if isinstance(resp, OAuthException):
         return 'Access denied: {0}'.format(resp.message)
 
-    session['oauth_token'] = (resp['access_token'], '')
-    me = spotify.get('/v1/me')
+    # session['oauth_token'] = (resp['access_token'], '')
+    me = spotify.get('/v1/me', token = (resp['access_token'],''))
 
     user_id = me.data['id']
+    db_session = Session()
+    user = db_session.query(User).filter(User.spotify_id == user_id).first()
+    tok = Token(**resp)
+    db_session.add(tok)
+    if not user:
+        user = User(user_id, tok)
+        db_session.add(user)
+    else:
+        user.token = tok
+    db_session.commit()
+    
 
     info = '<html><body>Logged in as id={0} name={1} redirect={2}'.format(
         me.data['id'],
@@ -164,7 +176,15 @@ def create_playlist(name):
 
 @spotify.tokengetter
 def get_spotify_oauth_token():
-    return session.get('oauth_token')
+    db_session = Session()
+    tok = db_session.query(Token).first() #todo: get user from session
+    if tok:
+        tok.get_token(spotify)
+        db_session.commit()
+        return (tok.access_token,'')
+    return None
+    # return session.get('oauth_token')
+
 
 
 if __name__ == '__main__':

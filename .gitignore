@@ -8,3 +8,4 @@ test_serv.py
 app.wsgi
 instance/
 *.db
+*.db-journal
