@@ -1,25 +1,17 @@
 import os
 import datetime
-from flask import Flask, redirect, url_for, session, request
-from flask_oauthlib.client import OAuth, OAuthException
-from app import app, Session
+from flask import Flask, redirect, url_for, render_template, session, request
+from flask_oauthlib.client import OAuthException
+from flask_wtf import FlaskForm
+from wtforms import StringField
+from wtforms.validators import DataRequired
+from app import app, Session, spotify
 from app.models import User, Playlist, Token
 
-SPOTIFY_APP_ID = app.config["SPOTIFY_APP_ID"]
-SPOTIFY_APP_SECRET = app.config["SPOTIFY_APP_SECRET"]
 
-oauth = OAuth(app)
-spotify = oauth.remote_app(
-    'spotify',
-    consumer_key=SPOTIFY_APP_ID,
-    consumer_secret=SPOTIFY_APP_SECRET,
-    request_token_params={
-        'scope': 'user-read-email user-library-read playlist-modify-public'},
-    base_url='https://api.spotify.com',
-    request_token_url=None,
-    access_token_url='https://accounts.spotify.com/api/token',
-    authorize_url='https://accounts.spotify.com/authorize'
-)
+class PlaylistForm(FlaskForm):
+    playlist_name = StringField('playlist_name', validators=[DataRequired()])
+    stale_days = StringField('stale_days', validators=[DataRequired()])
 
 
 @app.route('/')
@@ -49,40 +41,27 @@ def spotify_authorized():
         return 'Access denied: {0}'.format(resp.message)
 
     # session['oauth_token'] = (resp['access_token'], '')
-    me = spotify.get('/v1/me', token = (resp['access_token'],''))
+    me = spotify.get('/v1/me', token=(resp['access_token'], ''))
 
     user_id = me.data['id']
     db_session = Session()
+    session['user_id'] = user_id
     user = db_session.query(User).filter(User.spotify_id == user_id).first()
-    tok = Token(**resp)
-    db_session.add(tok)
     if not user:
-        user = User(user_id, tok)
-        db_session.add(user)
-    else:
+        user = User(user_id)
+        tok = Token(user, **resp)
         user.token = tok
-    db_session.commit()
-    
+        db_session.add(user)
+        db_session.commit()
 
     info = '<html><body>Logged in as id={0} name={1} redirect={2}'.format(
         me.data['id'],
         me.data['display_name'],
-        request.args.get('next')) + '<br><a href=http://localhost:8080/rolling>rolling</a>'
-    info += '<br><a href=http://localhost:8080/info/tracks>tracks</a>'
+        request.args.get('next'))
+    info += '<br><a href=http://localhost:8080/cull_stale_tracks>cull stale</a>'
+    info += '<br><a href=http://localhost:8080/create_rolling_playlist>create rolling playlist</a>'
     info += '<br><a href=http://localhost:8080/info/playlists>playlists</a></body></html>'
     return info
-
-
-@app.route('/info/tracks')
-def get_tracks():
-    track_obj = spotify.get('/v1/me/tracks')
-    tracks = [(track['track']['name'], track['track']['artists'][0]['name'])
-              for track in track_obj.data['items']]
-    html = "<html><body>"
-    for (t_name, t_artist) in tracks:
-        html += '<br>track: {} by {}\n'.format(t_name, t_artist)
-    html += "</body></html>"
-    return html
 
 
 @app.route('/info/playlists')
@@ -98,93 +77,65 @@ def get_playlists():
     return html
 
 
-@app.route('/info/playlist_tracks/<p_id>/')
-def show_playlist_tracks(p_id):
-    tracks = get_playlist_tracks(p_id)
-    html = "<html><body>"
-    for t in tracks:
-        html += '<br><a href=http://localhost:8080/delete_track/{0}/{1}>track: {1} by {2}\n</a>'.format(
-            p_id, t['track']['name'], t['added_at'])
-    html += "</body></html>"
-    return html
+@app.route('/make_rolling/<string:playlist>/<int:days_stale>/')
+def rolling_playlist(playlist, days_stale):
+    # todo check if real playlist
+    db_session = Session()
+    user = get_current_user(db_session)
+    plst = Playlist(user, playlist, days_stale)
+    user.playlists.append(plst)
+    db_session.commit()
+
+    return 'successfully made rolling playlist {}'.format(playlist)
 
 
-def get_playlist_tracks(p_id):
-    tracks = []
-    user_id = spotify.get('v1/me').data['id']
-    get_str = '/v1/users/' + user_id + '/playlists/' + p_id + '/tracks'
-    while get_str:
-        playlists_obj = spotify.get(get_str)
-        tracks = tracks + [track for track in playlists_obj.data['items']]
-        get_str = playlists_obj.data['next']
-    return tracks
+@app.route('/cull_stale_tracks/')
+def cull_stale_tracks():
+    db_session = Session()
+    playlists = db_session.query(Playlist).all()
+    for p in playlists:
+        p.cull_tracks()
+    return "culled tracks"
 
 
-@app.route('/delete_track/<playlist>/<track>/')
-def remove_track(playlist, track):
-    user_id = spotify.get('v1/me').data['id']
-    delete_endpoint = '/v1/users/' + user_id + '/playlists/' + playlist + '/tracks'
-    track_del_data = {
-        'tracks': [{'uri': track}]
-    }
-    resp = spotify.delete(delete_endpoint, data=track_del_data, format='json')
-    return redirect(url_for('show_playlist_tracks', p_id=playlist))
-
-
-@app.route('/delete_tracks/<playlist>/<track>/')
-def remove_tracks(playlist, tracks):
-    user_id = spotify.get('v1/me').data['id']
-    delete_endpoint = '/v1/users/' + user_id + '/playlists/' + playlist + '/tracks'
-    track_del_data = {
-        'tracks': []
-    }
-    track_del_data['tracks'] = [{'uri': t['uri']} for t in tracks]
-    # todo: add limit to 100
-    resp = spotify.delete(delete_endpoint, data=track_del_data, format='json')
-    return redirect(url_for('show_playlist_tracks', p_id=playlist))
-
-
-@app.route('/remove_stale_tracks/<string:playlist>/<int:days>/', methods=['delete'])
-def remove_tracks_after_date(playlist,days):  
-    stale_date = datetime.datetime.utcnow() - datetime.timedelta(days=days)
-    tracks = get_playlist_tracks(playlist)
-    del_tracks = []
-    for t in tracks:
-        t_added = datetime.datetime.strptime(
-            t["added_at"], "%Y-%m-%dT%H:%M:%SZ")
-        if t_added < stale_date:
-            del_tracks.append(t['track'])
-            # remove_track(playlist, t['track']['id'])
-    remove_tracks(playlist, del_tracks)
-    return redirect(url_for('show_playlist_tracks', p_id=playlist))
-
-
-@app.route('/rolling')
-def rolling_playlist():
-    create_playlist("Rolling")
-    return ''
-
-
-def create_playlist(name):
-    params = {'name': name}
-    user_id = spotify.get('/v1/me').data['id']
-    resp = spotify.post('/v1/users/' + str(user_id) +
-                        '/playlists', data=params, format='json')
-    print("created playlist")
-    return "created new playlist" + name
+@app.route('/create_rolling_playlist', methods=['POST', 'GET'])
+def new_rolling_playlist():
+    form = PlaylistForm()
+    if form.validate_on_submit():
+        db_session = Session()
+        user = get_current_user(db_session)
+        params = {'name': form.playlist_name.data}
+        create_playlist_url = '/v1/users/{}/playlists'.format(user.spotify_id)
+        resp = spotify.post(create_playlist_url, data=params, format='json')
+        p_id = resp.data['id']
+        plst = Playlist(user, p_id, form.stale_days.data)
+        user.playlists.append(plst)
+        db_session.commit()
+        print("created playlist")
+        return "created new playlist " + form.playlist_name.data
+    else:
+        return render_template('createPlaylist.html', form=form)
 
 
 @spotify.tokengetter
 def get_spotify_oauth_token():
     db_session = Session()
-    tok = db_session.query(Token).first() #todo: get user from session
+    user = get_current_user(db_session)
+    if not user:
+        return None
+    tok = user.token
     if tok:
-        tok.get_token(spotify)
+        tok.get_token()
         db_session.commit()
-        return (tok.access_token,'')
+        return (tok.access_token, '')
     return None
     # return session.get('oauth_token')
 
+
+def get_current_user(db_session):
+    user = db_session.query(User).filter_by(
+        spotify_id=session['user_id']).first()
+    return user
 
 
 if __name__ == '__main__':
