@@ -61,7 +61,7 @@ class Playlist(db_base):
             self.user.spotify_id, self.playlist_id
         )
         while tracks_url:
-            playlists_obj = spotify.get(tracks_url)
+            playlists_obj = spotify.get(tracks_url, token=(self.user.token.get_token(),''))
             tracks = tracks + [track for track in playlists_obj.data['items']]
             tracks_url = playlists_obj.data['next']
         return tracks
@@ -75,7 +75,7 @@ class Playlist(db_base):
         }
         track_del_data['tracks'] = [{'uri': t['uri']} for t in tracks]
         # todo: add limit to 100
-        resp = spotify.delete(delete_tracks_url, data=track_del_data, format='json')
+        spotify.delete(delete_tracks_url, data=track_del_data, format='json', token=(self.user.token.get_token(),''))
         return 
 
 class Token(db_base):

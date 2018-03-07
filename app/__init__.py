@@ -7,6 +7,7 @@ app = Flask(__name__, instance_relative_config=True)
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 # app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///test.db"
 app.config.from_pyfile('config.py')
+# app.config.from_envvar('APP_SETTINGS')
 db_base = declarative_base()
 db_engine = create_engine('sqlite:///test.db')
 Session = sessionmaker(bind=db_engine)
@@ -31,4 +32,4 @@ spotify = oauth.remote_app(
 from app import views, models 
 
 if __name__ == "__main__":
-    app.run(port=8080)
+    app.run()

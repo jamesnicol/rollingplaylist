@@ -40,7 +40,6 @@ def spotify_authorized():
     if isinstance(resp, OAuthException):
         return 'Access denied: {0}'.format(resp.message)
 
-    # session['oauth_token'] = (resp['access_token'], '')
     me = spotify.get('/v1/me', token=(resp['access_token'], ''))
 
     user_id = me.data['id']
@@ -58,9 +57,12 @@ def spotify_authorized():
         me.data['id'],
         me.data['display_name'],
         request.args.get('next'))
-    info += '<br><a href=http://localhost:8080/cull_stale_tracks>cull stale</a>'
-    info += '<br><a href=http://localhost:8080/create_rolling_playlist>create rolling playlist</a>'
-    info += '<br><a href=http://localhost:8080/info/playlists>playlists</a></body></html>'
+    info += '<br><a href={}>cull stale</a>'.format(
+        url_for('cull_stale_tracks', _external=True))
+    info += '<br><a href={}>create rolling playlist</a>'.format(
+        url_for('new_rolling_playlist', _external=True))
+    info += '<br><a href={}>playlists</a></body></html>'.format(
+        url_for('get_playlists', _external=True))
     return info
 
 
@@ -71,8 +73,7 @@ def get_playlists():
                  for playlist in playlists_obj.data['items']]
     html = "<html><body>"
     for (p_name, p_id) in playlists:
-        html += '<br><a href=http://localhost:8080/info/playlist_tracks/{}>playlist: {}</a>'.format(
-            p_id, p_name)
+        html += '<br><p>id: {}, name: {}</a>'.format(p_id, p_name)
     html += "</body></html>"
     return html
 
@@ -121,7 +122,7 @@ def new_rolling_playlist():
 def get_spotify_oauth_token():
     db_session = Session()
     user = get_current_user(db_session)
-    if not user:
+    if user is None:
         return None
     tok = user.token
     if tok:
@@ -133,10 +134,10 @@ def get_spotify_oauth_token():
 
 
 def get_current_user(db_session):
-    user = db_session.query(User).filter_by(
-        spotify_id=session['user_id']).first()
+    try:
+        user = db_session.query(User).filter_by(
+            spotify_id=session['user_id']).first()
+    except KeyError:
+        print("no user in session")
+        return None
     return user
-
-
-if __name__ == '__main__':
-    app.run(port=8080)
