@@ -1,19 +1,17 @@
 # from app import db
-from sqlalchemy import ForeignKey, Sequence, Column, Integer, String, DateTime
-from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 import requests
 import json
-from app import spotify, db_base, Session
+from app import spotify, db
 
 
-class User(db_base):
+class User(db.Model):
     """todo: write docstring for this class"""
     __tablename__ = 'user'
-    id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
-    spotify_id = Column(String, unique=True)
-    token = relationship("Token", uselist=False, back_populates="user")
-    playlists = relationship("Playlist", back_populates="user")
+    id = db.Column(db.Integer, db.Sequence('user_id_seq'), primary_key=True)
+    spotify_id = db.Column(db.String, unique=True)
+    token = db.relationship("Token", uselist=False, back_populates="user")
+    playlists = db.relationship("Playlist", back_populates="user")
 
     def __init__(self, spotify_id):
         self.spotify_id = spotify_id
@@ -24,13 +22,13 @@ class User(db_base):
         )
 
 
-class Playlist(db_base):
+class Playlist(db.Model):
     __tablename__ = 'playlist'
-    id = Column(Integer, Sequence('playlist_id_seq'), primary_key=True)
-    playlist_id = Column(String, unique=True)
-    stale_period_days = Column(Integer)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    user = relationship("User", uselist=False, back_populates="playlists")
+    id = db.Column(db.Integer, db.Sequence('playlist_id_seq'), primary_key=True)
+    playlist_id = db.Column(db.String, unique=True)
+    stale_period_days = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship("User", uselist=False, back_populates="playlists")
 
     def __init__(self, user, playlist_id, days):
         self.playlist_id = playlist_id
@@ -78,14 +76,14 @@ class Playlist(db_base):
         spotify.delete(delete_tracks_url, data=track_del_data, format='json', token=(self.user.token.get_token(),''))
         return 
 
-class Token(db_base):
+class Token(db.Model):
     __tablename__ = 'token'
-    id = Column(Integer, Sequence('token_id_seq'), primary_key=True)
-    access_token = Column(String)
-    refresh_token = Column(String)
-    expires = Column(DateTime)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    user = relationship("User", uselist=False, back_populates="token")
+    id = db.Column(db.Integer, db.Sequence('token_id_seq'), primary_key=True)
+    access_token = db.Column(db.String)
+    refresh_token = db.Column(db.String)
+    expires = db.Column(db.DateTime)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship("User", uselist=False, back_populates="token")
 
     def __init__(self, user, **kwargs):
         self.user = user
