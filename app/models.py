@@ -18,7 +18,7 @@ class User(db.Model):
 
     def __repr__(self):
         return "Spotify id: {}, spotify_token: {}\n".format(
-            self.spotify_id, self.spotify_token
+            self.spotify_id, self.token
         )
 
 

@@ -81,8 +81,15 @@ def get_playlists():
 def rolling_playlist(playlist, days_stale):
     # todo check if real playlist
     user = get_current_user()
-    plst = Playlist(user, playlist, days_stale)
-    user.playlists.append(plst)
+    plst = next((p for p in user.playlists if p.playlist_id == playlist), None)
+    if plst:
+        plst.stale_period_days = days_stale
+    else:
+        playlists_obj = spotify.get('/v1/users/{}/playlists/{}'.format(user.spotify_id,playlist))
+        if playlists_obj.status != 200:
+            return "playlist not owned by user"
+        plst = Playlist(user, playlist, days_stale)
+        user.playlists.append(plst)
     db.session.commit()
 
     return 'successfully made rolling playlist {}'.format(playlist)
