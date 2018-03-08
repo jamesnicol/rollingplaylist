@@ -23,7 +23,6 @@ def index():
 def login():
     callback = url_for(
         'spotify_authorized',
-        next=request.args.get('next') or request.referrer or None,
         _external=True
     )
     print(callback)
