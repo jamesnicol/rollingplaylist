@@ -26,6 +26,7 @@ def login():
         next=request.args.get('next') or request.referrer or None,
         _external=True
     )
+    print(callback)
     return spotify.authorize(callback=callback)
 
 
