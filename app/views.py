@@ -16,6 +16,7 @@ class PlaylistForm(FlaskForm):
 
 @app.route('/')
 def index():
+    return render_template('base.html')
     return redirect(url_for('login'))
 
 
@@ -62,7 +63,7 @@ def spotify_authorized():
         url_for('new_rolling_playlist', _external=True))
     info += '<br><a href={}>playlists</a></body></html>'.format(
         url_for('get_playlists', _external=True))
-    return info
+    return render_template('base.html')
 
 
 @app.route('/info/playlists')
