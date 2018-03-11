@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>W3.CSS Template</title>
+<title>FRESH PLAYLISTS</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
@@ -24,8 +24,8 @@ body, html {
 
 /* First image (Logo. Full height) */
 .bgimg-1 {
-    background-image: url('/w3images/parallax1.jpg');
-    min-height: 100%;
+    background-image: url('./cover_img.jpg');
+    min-height: 50%;
 }
 
 /* Second image (Portfolio) */
@@ -90,8 +90,8 @@ body, html {
     <div class="w3-col m4 w3-container">
     </div>
     <div class="w3-col m8 w3-panel">
-      <p> Enter a playlist name and expiration period in days and it'll do the rest</p>
-      <form action="/create_rolling_playlist" target="_blank">
+      <p> Login, then enter a playlist name and expiration period in days and it'll do the rest</p>
+      <form method="POST" action="/create_rolling_playlist">
         <div class="w3-row-padding" style="margin:0 -16px 8px -16px">
           <div class="w3-half">
             <input class="w3-input w3-border" type="text" placeholder="Playlist Name" required name="playlist_name">
@@ -116,7 +116,6 @@ body, html {
   </div>
 </footer>
  
-<!-- Add Google Maps -->
 <script>
 // Change style of navbar on scroll
 window.onscroll = function() {myFunction()};

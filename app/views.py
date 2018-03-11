@@ -2,22 +2,13 @@ import os
 import datetime
 from flask import Flask, redirect, url_for, render_template, session, request
 from flask_oauthlib.client import OAuthException
-from flask_wtf import FlaskForm
-from wtforms import StringField
-from wtforms.validators import DataRequired
 from app import app, db, spotify
 from app.models import User, Playlist, Token
-
-
-class PlaylistForm(FlaskForm):
-    playlist_name = StringField('playlist_name', validators=[DataRequired()])
-    stale_days = StringField('stale_days', validators=[DataRequired()])
 
 
 @app.route('/')
 def index():
     return render_template('base.html')
-    return redirect(url_for('login'))
 
 
 @app.route('/login')
@@ -63,7 +54,8 @@ def spotify_authorized():
         url_for('new_rolling_playlist', _external=True))
     info += '<br><a href={}>playlists</a></body></html>'.format(
         url_for('get_playlists', _external=True))
-    return render_template('base.html')
+    return redirect(url_for('index'))
+    # render_template('base.html')
 
 
 @app.route('/info/playlists')
@@ -106,20 +98,22 @@ def cull_stale_tracks():
 
 @app.route('/create_rolling_playlist', methods=['POST', 'GET'])
 def new_rolling_playlist():
-    form = PlaylistForm()
-    if form.validate_on_submit():
-        user = get_current_user()
-        params = {'name': form.playlist_name.data}
-        create_playlist_url = '/v1/users/{}/playlists'.format(user.spotify_id)
-        resp = spotify.post(create_playlist_url, data=params, format='json')
-        p_id = resp.data['id']
-        plst = Playlist(user, p_id, form.stale_days.data)
-        user.playlists.append(plst)
-        db.session.commit()
-        print("created playlist")
-        return "created new playlist " + form.playlist_name.data
-    else:
-        return render_template('createPlaylist.html', form=form)
+    try:
+        if request.method == 'POST':
+            user = get_current_user()
+            if user is None:
+                return render_template('bigmeessage.html', message="PLEASE LOGIN")
+            params = {'name': request.form['playlist_name']}
+            create_playlist_url = '/v1/users/{}/playlists'.format(user.spotify_id)
+            resp = spotify.post(create_playlist_url, data=params, format='json')
+            p_id = resp.data['id']
+            plst = Playlist(user, p_id, request.form['days_stale'])
+            user.playlists.append(plst)
+            db.session.commit()
+            print("created playlist")
+            return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")
+    except:
+        return render_template('bigmessage.html', message="OOPS! SOMETHING WENT WRONG")
 
 
 @spotify.tokengetter

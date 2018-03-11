@@ -32,7 +32,7 @@ class Playlist(db.Model):
 
     def __init__(self, user, playlist_id, days):
         self.playlist_id = playlist_id
-        self.stale_period_days = days
+        self.stale_period_days = int(days)
         self.user = user
 
     def __repr__(self):
