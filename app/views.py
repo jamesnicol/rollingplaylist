@@ -102,7 +102,7 @@ def new_rolling_playlist():
         if request.method == 'POST':
             user = get_current_user()
             if user is None:
-                return render_template('bigmeessage.html', message="PLEASE LOGIN")
+                return render_template('bigmessage.html', message="PLEASE LOGIN")
             params = {'name': request.form['playlist_name']}
             create_playlist_url = '/v1/users/{}/playlists'.format(user.spotify_id)
             resp = spotify.post(create_playlist_url, data=params, format='json')
@@ -111,9 +111,9 @@ def new_rolling_playlist():
             user.playlists.append(plst)
             db.session.commit()
             print("created playlist")
-            return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")
     except:
         return render_template('bigmessage.html', message="OOPS! SOMETHING WENT WRONG")
+    return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")
 
 
 @spotify.tokengetter
