@@ -76,6 +76,13 @@ class Playlist(db.Model):
         spotify.delete(delete_tracks_url, data=track_del_data, format='json', token=(self.user.token.get_token(),''))
         return 
 
+class Sauce(db.Model):
+    __tablename__ = 'sauce'
+    id = db.Column(db.Integer, db.Sequence('sauce_id_seq'), primary_key=True)
+    songs = db.relationship("Song")
+    date_added = db.Column(db.DateTime)
+
+class Song(db.Model):
 class Token(db.Model):
     __tablename__ = 'token'
     id = db.Column(db.Integer, db.Sequence('token_id_seq'), primary_key=True)
