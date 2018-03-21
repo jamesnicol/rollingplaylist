@@ -79,10 +79,36 @@ class Playlist(db.Model):
 class Sauce(db.Model):
     __tablename__ = 'sauce'
     id = db.Column(db.Integer, db.Sequence('sauce_id_seq'), primary_key=True)
-    songs = db.relationship("Song")
+    num_songs = db.Column(db.Integer)
     date_added = db.Column(db.DateTime)
+    songs = db.relationship("Song", back_populates="sauce")
+
+    def __init__(self, songs_ids, sauce):
+        self.num_songs = 0
+        for s in song_ids:
+           self.num_songs += 1
+           self.songs.append(Song(s, self))
+
+        date_added = datetime.now()
+
+    def __repr__(self):
+        strn = "Sauce id: {}, date: {}\n".format(sef.id, str(self.date_added))
+        strn += "".join(["\t{}\n".format(str(s)) for s in songs])
+        return strn
 
 class Song(db.Model):
+    __tablename__ = 'song'
+    id = db.Column(db.Integer, db.Sequence('song_id_seq'), primary_key=True)
+    song_id = db.Column(db.String)
+    sauce = db.Column(db.Integer, db.ForeignKey('sauce.id'), nullable=False))
+
+    def __init__(self, song_id, sauce):
+        self.song_id = song_id
+        self.sauce = sauce
+
+    def __repr__(self):
+        return "Song id: {}".format(self.song_id)
+    
 class Token(db.Model):
     __tablename__ = 'token'
     id = db.Column(db.Integer, db.Sequence('token_id_seq'), primary_key=True)
