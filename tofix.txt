@@ -1,0 +1,15 @@
+nothing in root should be code
+change app folder name to actual app name
+don't include code in __init__.py
+change structure to
+ app/
+  models/
+    user.py
+    playlist.py
+  views/
+    homepage.py
+  templates/
+    base.html
+
+use:
+    from app.models.user import user
