@@ -18,6 +18,3 @@ spotify = oauth.remote_app(
     access_token_url='https://accounts.spotify.com/api/token',
     authorize_url='https://accounts.spotify.com/authorize'
 )
-
-if __name__ == "__main__":
-    freshplaylist.run()

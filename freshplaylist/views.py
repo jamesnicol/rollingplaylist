@@ -9,14 +9,16 @@ from freshplaylist.models.token import Token
 
 @freshplaylist.route('/')
 def index():
+    print("Got root request")
+    return "HOME PAGE"
     return render_template('base.html')
 
-@freshplaylist.route('/<path:path>')
-def unsw_file(path):
-    try:
-        return freshplaylist.send_static_file(path)
-    except Exception as e:
-        return ''
+# @freshplaylist.route('/<path:path>')
+# def unsw_file(path):
+#     try:
+#         return freshplaylist.send_static_file(path)
+#     except Exception as e:
+#         return ''
 
 @freshplaylist.route('/login')
 def login():

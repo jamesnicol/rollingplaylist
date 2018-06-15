@@ -1,5 +1,6 @@
 #!env/bin/python3
-from app import app
+from freshplaylist import freshplaylist
 
 if __name__ == "__main__":
-    app.run()
+    freshplaylist.run(host='0.0.0.0')
+    # freshplaylist.run()
