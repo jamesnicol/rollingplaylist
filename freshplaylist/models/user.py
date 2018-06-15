@@ -1,4 +1,4 @@
-from freshplaylist import spotify, db
+from freshplaylist import db
 
 class User(db.Model):
     """todo: write docstring for this class"""
