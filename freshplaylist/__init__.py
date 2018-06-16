@@ -2,15 +2,15 @@ from flask import Flask
 from flask_oauthlib.client import OAuth
 from flask_sqlalchemy import SQLAlchemy
 
-freshplaylist = Flask(__name__, static_folder='static')
-freshplaylist.config.from_pyfile('config.py')
-db = SQLAlchemy(freshplaylist)
+app = Flask(__name__, static_folder='static')
+app.config.from_pyfile('config.py')
+db = SQLAlchemy(app)
 
-oauth = OAuth(freshplaylist)
+oauth = OAuth(app)
 spotify = oauth.remote_app(
     'spotify',
-    consumer_key=freshplaylist.config["SPOTIFY_APP_ID"],
-    consumer_secret=freshplaylist.config["SPOTIFY_APP_SECRET"],
+    consumer_key=app.config["SPOTIFY_APP_ID"],
+    consumer_secret=app.config["SPOTIFY_APP_SECRET"],
     request_token_params={
         'scope': 'user-read-email user-library-read playlist-modify-public'},
     base_url='https://api.spotify.com',

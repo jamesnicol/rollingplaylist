@@ -1,3 +1,3 @@
 #!flask/bin/python
-from app import db
+from freshplaylist import db
 db.create_all()

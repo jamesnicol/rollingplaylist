@@ -2,25 +2,25 @@ import os
 import datetime
 from flask import Flask, redirect, url_for, render_template, session, request
 from flask_oauthlib.client import OAuthException
-from freshplaylist import freshplaylist, db, spotify
+from freshplaylist import app, db, spotify
 from freshplaylist.models.user import User
 from freshplaylist.models.playlist import Playlist
 from freshplaylist.models.token import Token
 
-@freshplaylist.route('/')
+@app.route('/')
 def index():
     print("Got root request")
     return "HOME PAGE"
     return render_template('base.html')
 
-# @freshplaylist.route('/<path:path>')
+# @app.route('/<path:path>')
 # def unsw_file(path):
 #     try:
-#         return freshplaylist.send_static_file(path)
+#         return app.send_static_file(path)
 #     except Exception as e:
 #         return ''
 
-@freshplaylist.route('/login')
+@app.route('/login')
 def login():
     callback = url_for(
         'spotify_authorized',
@@ -30,7 +30,7 @@ def login():
     return spotify.authorize(callback=callback)
 
 
-@freshplaylist.route('/login/authorized')
+@app.route('/login/authorized')
 def spotify_authorized():
     resp = spotify.authorized_response()
     if resp is None:
@@ -67,7 +67,7 @@ def spotify_authorized():
     # render_template('base.html')
 
 
-@freshplaylist.route('/info/playlists')
+@app.route('/info/playlists')
 def get_playlists():
     playlists_obj = spotify.get('/v1/me/playlists')
     playlists = [(playlist['name'], playlist['id'])
@@ -79,7 +79,7 @@ def get_playlists():
     return html
 
 
-@freshplaylist.route('/make_rolling/<string:playlist>/<int:days_stale>/')
+@app.route('/make_rolling/<string:playlist>/<int:days_stale>/')
 def rolling_playlist(playlist, days_stale):
     # todo check if real playlist
     user = get_current_user()
@@ -97,7 +97,7 @@ def rolling_playlist(playlist, days_stale):
     return 'successfully made rolling playlist {}'.format(playlist)
 
 
-@freshplaylist.route('/cull_stale_tracks/')
+@app.route('/cull_stale_tracks/')
 def cull_stale_tracks():
     playlists = db.session.query(Playlist).all()
     for p in playlists:
@@ -105,7 +105,7 @@ def cull_stale_tracks():
     return "culled tracks"
 
 
-@freshplaylist.route('/create_rolling_playlist', methods=['POST', 'GET'])
+@app.route('/create_rolling_playlist', methods=['POST', 'GET'])
 def new_rolling_playlist():
     try:
         if request.method == 'POST':
