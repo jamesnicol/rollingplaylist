@@ -3,13 +3,13 @@ import requests
 from freshplaylist import spotify, db
 
 class Token(db.Model):
-    __tablename__ = 'token'
+    __tablename__ = 'tokens'
     id = db.Column(db.Integer, db.Sequence('token_id_seq'), primary_key=True)
     access_token = db.Column(db.String)
     refresh_token = db.Column(db.String)
     expires = db.Column(db.DateTime)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship("User", uselist=False, back_populates="token")
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship("Users", uselist=False, back_populates="token")
 
     def __init__(self, user, **kwargs):
         self.user = user

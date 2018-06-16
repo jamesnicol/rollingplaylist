@@ -2,12 +2,12 @@ from datetime import datetime, timedelta
 from freshplaylist import spotify, db
 
 class Playlist(db.Model):
-    __tablename__ = 'playlist'
+    __tablename__ = 'playlists'
     id = db.Column(db.Integer, db.Sequence('playlist_id_seq'), primary_key=True)
     playlist_id = db.Column(db.String, unique=True)
     stale_period_days = db.Column(db.Integer)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship("User", uselist=False, back_populates="playlists")
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship("Users", uselist=False, back_populates="playlists")
 
     def __init__(self, user, playlist_id, days):
         self.playlist_id = playlist_id
