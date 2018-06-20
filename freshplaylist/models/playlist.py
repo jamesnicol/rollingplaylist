@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from freshplaylist import spotify, db
 
 class Playlist(db.Model):
-    __tablename__ = 'playlist'
+    __tablename__ = 'playlists'
     id = db.Column(db.Integer, db.Sequence('playlist_id_seq'), primary_key=True)
     playlist_id = db.Column(db.String, unique=True)
     stale_period_days = db.Column(db.Integer)
