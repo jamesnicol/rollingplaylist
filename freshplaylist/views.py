@@ -12,11 +12,8 @@ def index():
     return render_template('base.html')
 
 @app.route('/<path:path>')
-def unsw_file(path):
-    try:
+def serve_static_file(path):
         return app.send_static_file(path)
-    except Exception as e:
-        return ''
 
 @app.route('/login')
 def login():
@@ -24,7 +21,6 @@ def login():
         'spotify_authorized',
         _external=True
     )
-    print(callback)
     return spotify.authorize(callback=callback)
 
 
@@ -103,7 +99,7 @@ def cull_stale_tracks():
     return "culled tracks"
 
 
-@app.route('/create_rolling_playlist', methods=['POST', 'GET'])
+@app.route('/create_rolling_playlist', methods=['POST'])
 def new_rolling_playlist():
     try:
         if request.method == 'POST':
@@ -117,7 +113,6 @@ def new_rolling_playlist():
             plst = Playlist(user, p_id, request.form['days_stale'])
             user.playlists.append(plst)
             db.session.commit()
-            print("created playlist")
     except:
         return render_template('bigmessage.html', message="OOPS! SOMETHING WENT WRONG")
     return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")

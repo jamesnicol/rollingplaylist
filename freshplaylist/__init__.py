@@ -18,5 +18,3 @@ spotify = oauth.remote_app(
     access_token_url='https://accounts.spotify.com/api/token',
     authorize_url='https://accounts.spotify.com/authorize'
 )
-
-from freshplaylist import views

@@ -52,6 +52,5 @@ class Playlist(db.Model):
         }
         for i in range(0, len(tracks), 100):
             track_del_data['tracks'] = [{'uri': t['uri']} for t in tracks[i:i+100]]
-            # todo: add limit to 100
             spotify.delete(delete_tracks_url, data=track_del_data, format='json', token=(self.user.token.get_token(),''))
         return 
