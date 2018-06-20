@@ -9,10 +9,10 @@ class Token(db.Model):
     refresh_token = db.Column(db.String)
     expires = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship("User", uselist=False, back_populates="token")
+    t_user = db.relationship("User", uselist=False, back_populates="token")
 
     def __init__(self, user, **kwargs):
-        self.user = user
+        self.t_user = user
         expires_in = kwargs.pop('expires_in', None)
         if expires_in is not None:
             self.expires = datetime.now() + timedelta(seconds=expires_in)
