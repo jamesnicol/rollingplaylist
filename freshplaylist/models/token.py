@@ -9,7 +9,7 @@ class Token(db.Model):
     refresh_token = db.Column(db.String)
     expires = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship("Users", uselist=False, back_populates="token")
+    user = db.relationship("User", uselist=False, back_populates="token")
 
     def __init__(self, user, **kwargs):
         self.user = user

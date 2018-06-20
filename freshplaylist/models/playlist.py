@@ -7,7 +7,7 @@ class Playlist(db.Model):
     playlist_id = db.Column(db.String, unique=True)
     stale_period_days = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship("Users", uselist=False, back_populates="playlists")
+    user = db.relationship("User", uselist=False, back_populates="playlists")
 
     def __init__(self, user, playlist_id, days):
         self.playlist_id = playlist_id
