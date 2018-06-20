@@ -9,3 +9,4 @@ app.wsgi
 instance/
 *.db
 *.db-journal
+tofix.txt
