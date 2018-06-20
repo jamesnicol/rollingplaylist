@@ -1,3 +1,4 @@
+tofix.txt
 env/
 *.pyc
 launch.json
@@ -9,4 +10,3 @@ app.wsgi
 instance/
 *.db
 *.db-journal
-tofix.txt
