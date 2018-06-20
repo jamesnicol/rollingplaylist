@@ -10,6 +10,7 @@ itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==1.0
 oauthlib==2.1.0
+psycopg2==2.7.5
 requests==2.19.1
 requests-oauthlib==1.0.0
 SQLAlchemy==1.2.8
