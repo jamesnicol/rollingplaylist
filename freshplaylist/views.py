@@ -6,6 +6,7 @@ from freshplaylist import app, db, spotify
 from freshplaylist.models.user import User
 from freshplaylist.models.playlist import Playlist
 from freshplaylist.models.token import Token
+from freshplaylist import hit_scrape
 
 @app.route('/')
 def index():
@@ -117,6 +118,10 @@ def new_rolling_playlist():
         return render_template('bigmessage.html', message="OOPS! SOMETHING WENT WRONG")
     return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")
 
+@app.route('/hit_list')
+def show_hit_list():
+    hits = [', '.join(["= ".join([k,v]) for k,v in d.items()]) for d in hit_scrape.get_hit_list()]
+    return render_template('list.html', your_list=hits)
 
 @spotify.tokengetter
 def get_spotify_oauth_token():
@@ -139,3 +144,5 @@ def get_current_user():
         print("no user in session")
         return None
     return user
+
+
