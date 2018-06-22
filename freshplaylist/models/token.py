@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import requests
-from freshplaylist import spotify, db
+from freshplaylist import db
+from freshplaylist.auth import spotify
+
 
 class Token(db.Model):
     __tablename__ = 'tokens'
@@ -31,6 +33,7 @@ class Token(db.Model):
             expires_in = data['expires_in']
             if expires_in is not None:
                 self.expires = datetime.now() + timedelta(seconds=expires_in)
+            db.session.commit()
         return self.access_token
 
     def __repr__(self):

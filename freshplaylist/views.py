@@ -2,19 +2,24 @@ import os
 import datetime
 from flask import Flask, redirect, url_for, render_template, session, request
 from flask_oauthlib.client import OAuthException
-from freshplaylist import app, db, spotify
+from freshplaylist import app, db
+from freshplaylist.auth import spotify, get_current_user
 from freshplaylist.models.user import User
 from freshplaylist.models.playlist import Playlist
 from freshplaylist.models.token import Token
+from freshplaylist.models.song import Song
 from freshplaylist import hit_scrape
+
 
 @app.route('/')
 def index():
     return render_template('base.html')
 
+
 @app.route('/<path:path>')
 def serve_static_file(path):
-        return app.send_static_file(path)
+    return app.send_static_file(path)
+
 
 @app.route('/login')
 def login():
@@ -48,30 +53,15 @@ def spotify_authorized():
         db.session.add(user)
         db.session.commit()
 
-    info = '<html><body>Logged in as id={0} name={1} redirect={2}'.format(
-        me.data['id'],
-        me.data['display_name'],
-        request.args.get('next'))
-    info += '<br><a href={}>cull stale</a>'.format(
-        url_for('cull_stale_tracks', _external=True))
-    info += '<br><a href={}>create rolling playlist</a>'.format(
-        url_for('new_rolling_playlist', _external=True))
-    info += '<br><a href={}>playlists</a></body></html>'.format(
-        url_for('get_playlists', _external=True))
     return redirect(url_for('index'))
-    # render_template('base.html')
 
 
 @app.route('/info/playlists')
 def get_playlists():
     playlists_obj = spotify.get('/v1/me/playlists')
-    playlists = [(playlist['name'], playlist['id'])
-                 for playlist in playlists_obj.data['items']]
-    html = "<html><body>"
-    for (p_name, p_id) in playlists:
-        html += '<br><p>id: {}, name: {}</a>'.format(p_id, p_name)
-    html += "</body></html>"
-    return html
+    playlists = ['id: {}, name: {}'.format(
+        p['id'], p['name']) for p in playlists_obj.data['items']]
+    return render_template('list.html', your_list=playlists)
 
 
 @app.route('/make_rolling/<string:playlist>/<int:days_stale>/')
@@ -82,7 +72,8 @@ def rolling_playlist(playlist, days_stale):
     if plst:
         plst.stale_period_days = days_stale
     else:
-        playlists_obj = spotify.get('/v1/users/{}/playlists/{}'.format(user.spotify_id,playlist))
+        playlists_obj = spotify.get(
+            '/v1/users/{}/playlists/{}'.format(user.spotify_id, playlist))
         if playlists_obj.status != 200:
             return "playlist not owned by user"
         plst = Playlist(user, playlist, days_stale)
@@ -106,43 +97,36 @@ def new_rolling_playlist():
         if request.method == 'POST':
             user = get_current_user()
             if user is None:
-                return render_template('bigmessage.html', message="PLEASE LOGIN")
+                return render_template('bigmessage.html',
+                                       message="PLEASE LOGIN")
             params = {'name': request.form['playlist_name']}
-            create_playlist_url = '/v1/users/{}/playlists'.format(user.spotify_id)
-            resp = spotify.post(create_playlist_url, data=params, format='json')
+            create_playlist_url = '/v1/users/{}/playlists'.format(
+                user.spotify_id)
+            resp = spotify.post(create_playlist_url,
+                                data=params, format='json')
             p_id = resp.data['id']
             plst = Playlist(user, p_id, request.form['days_stale'])
             user.playlists.append(plst)
             db.session.commit()
-    except:
-        return render_template('bigmessage.html', message="OOPS! SOMETHING WENT WRONG")
+    except Exception as e:
+        print(e)
+        return render_template('bigmessage.html',
+                               message="OOPS! SOMETHING WENT WRONG")
     return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")
+
 
 @app.route('/hit_list')
 def show_hit_list():
-    hits = [', '.join(["= ".join([k,v]) for k,v in d.items()]) for d in hit_scrape.get_hit_list()]
+    hits = [', '.join(["= ".join([k, v]) for k, v in d.items()])
+            for d in hit_scrape.get_hit_list()]
     return render_template('list.html', your_list=hits)
 
-@spotify.tokengetter
-def get_spotify_oauth_token():
-    user = get_current_user()
-    if user is None:
-        return None
-    tok = user.token
-    if tok:
-        tok.get_token()
+@app.route('/testsong')
+def test_song_id():
+    sng = db.session.query(Song).filter(Song.title == "No place").first()
+    if not sng:
+        sng = Song("No place", "Noplc", "Rufus")
+        db.session.add(sng)
         db.session.commit()
-        return (tok.access_token, '')
-    return None
 
-
-def get_current_user():
-    try:
-        user = db.session.query(User).filter_by(
-            spotify_id=session['user_id']).first()
-    except KeyError:
-        print("no user in session")
-        return None
-    return user
-
-
+    sng.get_id()

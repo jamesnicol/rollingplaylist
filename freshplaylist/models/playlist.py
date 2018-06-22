@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
-from freshplaylist import spotify, db
+from freshplaylist import db
+from freshplaylist.auth import spotify
+from freshplaylist.models.song import Song
 
 belongs_to = db.Table('belongs_to',
                       db.Column('song_id', db.Integer, db.ForeignKey(
-                                Song.id), primary_key=True),
+                                'songs.id'), primary_key=True),
                       db.Column('playlist_id', db.Integer, db.ForeignKey(
-                                Playlist.id), primary_key=True),
+                                'playlists.id'), primary_key=True),
                       )
 
 
@@ -68,6 +70,6 @@ class Playlist(db.Model):
             track_del_data['tracks'] = [{'uri': t['uri']}
                                         for t in tracks[i:i+100]]
             spotify.delete(delete_tracks_url, data=track_del_data,
-                           format='json', 
+                           format='json',
                            token=(self.p_user.token.get_token(), ''))
         return

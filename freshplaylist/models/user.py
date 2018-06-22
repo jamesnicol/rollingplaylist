@@ -1,5 +1,6 @@
 from freshplaylist import db
 
+
 class User(db.Model):
     """todo: write docstring for this class"""
     __tablename__ = 'users'

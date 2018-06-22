@@ -1,11 +1,5 @@
-from freshplaylist import spotify, db
-
-belongs_to = db.Table('belongs_to',
-                      db.Column('song_id', db.Integer, db.ForeignKey(
-                          Song.id), primary_key=True),
-                      db.Column('playlist_id', db.Integer, db.ForeignKey(
-                          Playlist.id), primary_key=True),
-                      )
+from freshplaylist import db
+from freshplaylist.auth import spotify, get_client_token
 
 
 class Song(db.Model):
@@ -26,28 +20,17 @@ class Song(db.Model):
             self.title, self.album, self.artists
         )
 
-    def get_tracks(self):
+    def get_id(self):
         tracks = []
-        tracks_url = '/v1/users/{}/playlists/{}/tracks'.format(
-            self.p_user.spotify_id, self.playlist_id
-        )
-        while tracks_url:
-            playlists_obj = spotify.get(tracks_url, token=(
-                self.p_user.token.get_token(), ''))
-            tracks = tracks + [track for track in playlists_obj.data['items']]
-            tracks_url = playlists_obj.data['next']
-        return tracks
-
-    def remove_tracks(self, tracks):
-        delete_tracks_url = '/v1/users/{}/playlists/{}/tracks'.format(
-            self.p_user.spotify_id, self.playlist_id
-        )
-        track_del_data = {
-            'tracks': []
-        }
-        for i in range(0, len(tracks), 100):
-            track_del_data['tracks'] = [{'uri': t['uri']}
-                                        for t in tracks[i:i+100]]
-            spotify.delete(delete_tracks_url, data=track_del_data,
-                           format='json', token=(self.p_user.token.get_token(), ''))
-        return
+        query = 'track:"{}" artist:"{}"'.format(self.title, self.artists)
+        query = query.replace(",", "")
+        query = query.replace(" ", "%20")
+        params = {'q': query,
+                  'type': 'track',
+                  'market': 'AU',
+                  'limit': 1}
+        search_url = '/v1/search'
+        tracks = spotify.get(search_url,
+                             format='json',
+                             data=params)
+        tracks = tracks + [track for track in playlists_obj.data['items']]
