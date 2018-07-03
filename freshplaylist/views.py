@@ -2,7 +2,8 @@ import os
 import datetime
 from flask import Flask, redirect, url_for, render_template, session, request
 from flask_oauthlib.client import OAuthException
-from freshplaylist import app, db
+from freshplaylist import app
+from freshplaylist.models import db
 from freshplaylist.auth import spotify, get_current_user
 from freshplaylist.models.user import User
 from freshplaylist.models.playlist import Playlist
@@ -120,13 +121,3 @@ def show_hit_list():
     hits = [', '.join(["= ".join([k, v]) for k, v in d.items()])
             for d in hit_scrape.get_hit_list()]
     return render_template('list.html', your_list=hits)
-
-@app.route('/testsong')
-def test_song_id():
-    sng = db.session.query(Song).filter(Song.title == "No place").first()
-    if not sng:
-        sng = Song("No place", "Noplc", "Rufus")
-        db.session.add(sng)
-        db.session.commit()
-
-    sng.get_id()

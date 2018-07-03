@@ -1,21 +1,23 @@
 import requests
-from flask import session
+from flask import session, current_app
 from flask_oauthlib.client import OAuth
-from freshplaylist import app, db
+from freshplaylist import app
+from freshplaylist.models import db
 from freshplaylist.models.user import User
 
 oauth = OAuth(app)
-spotify = oauth.remote_app(
-    'spotify',
-    consumer_key=app.config["SPOTIFY_APP_ID"],
-    consumer_secret=app.config["SPOTIFY_APP_SECRET"],
-    request_token_params={
-        'scope': 'user-read-email user-library-read playlist-modify-public'},
-    base_url='https://api.spotify.com',
-    request_token_url=None,
-    access_token_url='https://accounts.spotify.com/api/token',
-    authorize_url='https://accounts.spotify.com/authorize'
-)
+with app.app_context():
+    spotify = oauth.remote_app(
+        'spotify',
+        consumer_key=current_app.config["SPOTIFY_APP_ID"],
+        consumer_secret=current_app.config["SPOTIFY_APP_SECRET"],
+        request_token_params={
+            'scope': 'user-read-email user-library-read playlist-modify-public'},
+        base_url='https://api.spotify.com',
+        request_token_url=None,
+        access_token_url='https://accounts.spotify.com/api/token',
+        authorize_url='https://accounts.spotify.com/authorize'
+    )
 
 
 @spotify.tokengetter

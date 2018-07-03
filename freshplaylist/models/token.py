@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import requests
-from freshplaylist import db
+from freshplaylist.models import db
 from freshplaylist.auth import spotify
 
 

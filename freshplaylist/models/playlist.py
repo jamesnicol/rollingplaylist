@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from freshplaylist import db
+from freshplaylist.models import db
 from freshplaylist.auth import spotify
 from freshplaylist.models.song import Song
 

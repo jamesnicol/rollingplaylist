@@ -1,4 +1,4 @@
-from freshplaylist import db
+from freshplaylist.models import db
 from freshplaylist.auth import spotify, get_client_token
 
 

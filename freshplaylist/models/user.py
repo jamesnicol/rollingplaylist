@@ -1,4 +1,4 @@
-from freshplaylist import db
+from freshplaylist.models import db
 
 
 class User(db.Model):
