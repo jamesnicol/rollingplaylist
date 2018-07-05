@@ -1,8 +1,6 @@
 import os
 import datetime
-from flask import Flask, redirect, url_for, render_template, session, request
-from flask_oauthlib.client import OAuthException
-from freshplaylist import app
+from flask import render_template, request, Blueprint
 from freshplaylist.models import db
 from freshplaylist.auth import spotify, get_current_user
 from freshplaylist.models.user import User
@@ -11,53 +9,20 @@ from freshplaylist.models.token import Token
 from freshplaylist.models.song import Song
 from freshplaylist import hit_scrape
 
+main_bp = Blueprint('main_bp', __name__)
 
-@app.route('/')
+
+@main_bp.route('/')
 def index():
     return render_template('base.html')
 
 
-@app.route('/<path:path>')
+@main_bp.route('/<path:path>')
 def serve_static_file(path):
-    return app.send_static_file(path)
+    return main_bp.send_static_file(path)
 
 
-@app.route('/login')
-def login():
-    callback = url_for(
-        'spotify_authorized',
-        _external=True
-    )
-    return spotify.authorize(callback=callback)
-
-
-@app.route('/login/authorized')
-def spotify_authorized():
-    resp = spotify.authorized_response()
-    if resp is None:
-        return 'Access denied: reason={0} error={1}'.format(
-            request.args['error_reason'],
-            request.args['error_description']
-        )
-    if isinstance(resp, OAuthException):
-        return 'Access denied: {0}'.format(resp.message)
-
-    me = spotify.get('/v1/me', token=(resp['access_token'], ''))
-
-    user_id = me.data['id']
-    session['user_id'] = user_id
-    user = db.session.query(User).filter(User.spotify_id == user_id).first()
-    if not user:
-        user = User(user_id)
-        tok = Token(user, **resp)
-        user.token = tok
-        db.session.add(user)
-        db.session.commit()
-
-    return redirect(url_for('index'))
-
-
-@app.route('/info/playlists')
+@main_bp.route('/info/playlists')
 def get_playlists():
     playlists_obj = spotify.get('/v1/me/playlists')
     playlists = ['id: {}, name: {}'.format(
@@ -65,7 +30,7 @@ def get_playlists():
     return render_template('list.html', your_list=playlists)
 
 
-@app.route('/make_rolling/<string:playlist>/<int:days_stale>/')
+@main_bp.route('/make_rolling/<string:playlist>/<int:days_stale>/')
 def rolling_playlist(playlist, days_stale):
     # todo check if real playlist
     user = get_current_user()
@@ -84,7 +49,7 @@ def rolling_playlist(playlist, days_stale):
     return 'successfully made rolling playlist {}'.format(playlist)
 
 
-@app.route('/cull_stale_tracks/')
+@main_bp.route('/cull_stale_tracks/')
 def cull_stale_tracks():
     playlists = db.session.query(Playlist).all()
     for p in playlists:
@@ -92,7 +57,7 @@ def cull_stale_tracks():
     return "culled tracks"
 
 
-@app.route('/create_rolling_playlist', methods=['POST'])
+@main_bp.route('/create_rolling_playlist', methods=['POST'])
 def new_rolling_playlist():
     try:
         if request.method == 'POST':
@@ -116,7 +81,7 @@ def new_rolling_playlist():
     return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")
 
 
-@app.route('/hit_list')
+@main_bp.route('/hit_list')
 def show_hit_list():
     hits = [', '.join(["= ".join([k, v]) for k, v in d.items()])
             for d in hit_scrape.get_hit_list()]

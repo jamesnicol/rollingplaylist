@@ -1,4 +1,19 @@
 # spotify
+## To run
+After setting the environment variables run with   
+```flask run [-p PORT_NUM -h HOST_NAME]```
 
-To run:
- Create an instance folder at the root and copy the file config.py and fill in your own config parameters
+
+## Environment variables
+
+Make sure that these environment variables are set   
+```
+APP_SECRET_KEY=*some random key*
+SPOTIFY_APP_ID=*your spotify app id*
+SPOTIFY_APP_SECRET=*your spotify app key*
+SERVER_NAME=*an address e.g. localhost.localdom:8080*
+DATABASE_URL='sqlite:///DATABSE_NAME'
+FLASK_ENV='development'
+FLASK_APP='freshplaylist'
+```
+note: ```SERVER_NAME``` must have a ```'.'``` in it for modern browsers to consider it a valid domain for sessions to work (e.g. add localhost.localdom to your hosts file)

@@ -1,23 +1,27 @@
 import requests
-from flask import session, current_app
+import os
+from flask import session, Blueprint, url_for, request, redirect
+from flask_oauthlib.client import OAuthException
 from flask_oauthlib.client import OAuth
-from freshplaylist import app
 from freshplaylist.models import db
 from freshplaylist.models.user import User
 
-oauth = OAuth(app)
-with app.app_context():
-    spotify = oauth.remote_app(
-        'spotify',
-        consumer_key=current_app.config["SPOTIFY_APP_ID"],
-        consumer_secret=current_app.config["SPOTIFY_APP_SECRET"],
-        request_token_params={
-            'scope': 'user-read-email user-library-read playlist-modify-public'},
-        base_url='https://api.spotify.com',
-        request_token_url=None,
-        access_token_url='https://accounts.spotify.com/api/token',
-        authorize_url='https://accounts.spotify.com/authorize'
-    )
+
+auth_bp = Blueprint('auth_bp', __name__)
+
+
+oauth = OAuth(auth_bp)
+spotify = oauth.remote_app(
+    'spotify',
+    consumer_key=os.environ["SPOTIFY_APP_ID"],
+    consumer_secret=os.environ["SPOTIFY_APP_SECRET"],
+    request_token_params={
+        'scope': 'user-read-email user-library-read playlist-modify-public'},
+    base_url='https://api.spotify.com',
+    request_token_url=None,
+    access_token_url='https://accounts.spotify.com/api/token',
+    authorize_url='https://accounts.spotify.com/authorize'
+)
 
 
 @spotify.tokengetter
@@ -31,6 +35,41 @@ def get_spotify_user_token():
         tok.get_token()
         return (tok.access_token, '')
     return None
+
+
+@auth_bp.route('/login')
+def login():
+    callback = url_for(
+        'auth_bp.spotify_authorized',
+        _external=True
+    )
+    return spotify.authorize(callback=callback)
+
+
+@auth_bp.route('/login/authorized')
+def spotify_authorized():
+    resp = spotify.authorized_response()
+    if resp is None:
+        return 'Access denied: reason={0} error={1}'.format(
+            request.args['error_reason'],
+            request.args['error_description']
+        )
+    if isinstance(resp, OAuthException):
+        return 'Access denied: {0}'.format(resp.message)
+
+    me = spotify.get('/v1/me', token=(resp['access_token'], ''))
+
+    user_id = me.data['id']
+    session['user_id'] = user_id
+    user = db.session.query(User).filter(User.spotify_id == user_id).first()
+    if not user:
+        user = User(user_id)
+        tok = Token(user, **resp)
+        user.token = tok
+        db.session.add(user)
+        db.session.commit()
+
+    return redirect(url_for('main_bp.index'))
 
 
 def get_current_user():
