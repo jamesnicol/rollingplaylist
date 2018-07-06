@@ -1,6 +1,6 @@
 import os
 import datetime
-from flask import render_template, request, Blueprint
+from flask import render_template, request, Blueprint, redirect, url_for
 from freshplaylist.models import db
 from freshplaylist.auth import spotify, get_current_user
 from freshplaylist.models.user import User
@@ -15,11 +15,6 @@ main_bp = Blueprint('main_bp', __name__)
 @main_bp.route('/')
 def index():
     return render_template('base.html')
-
-
-@main_bp.route('/<path:path>')
-def serve_static_file(path):
-    return main_bp.send_static_file(path)
 
 
 @main_bp.route('/info/playlists')

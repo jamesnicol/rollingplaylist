@@ -8,5 +8,7 @@ test_serv.py
 *~
 app.wsgi
 instance/
+freshplaylist/data/*
 *.db
 *.db-journal
+.pytest_cache/

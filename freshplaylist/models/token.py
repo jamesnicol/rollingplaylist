@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import requests
 from freshplaylist.models import db
-from freshplaylist.auth import spotify
+import freshplaylist.auth as auth
 
 
 class Token(db.Model):
@@ -25,9 +25,9 @@ class Token(db.Model):
         if not self.expires or self.expires < datetime.now():
             payload = {"grant_type": "refresh_token",
                        "refresh_token": self.refresh_token,
-                       "client_id": spotify.consumer_key,
-                       "client_secret": spotify.consumer_secret}
-            resp = requests.post(spotify.access_token_url, data=payload)
+                       "client_id": auth.spotify.consumer_key,
+                       "client_secret": auth.spotify.consumer_secret}
+            resp = requests.post(auth.spotify.access_token_url, data=payload)
             data = resp.json()
             self.access_token = data['access_token']
             expires_in = data['expires_in']

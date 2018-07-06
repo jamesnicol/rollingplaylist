@@ -5,9 +5,10 @@ from flask_oauthlib.client import OAuthException
 from flask_oauthlib.client import OAuth
 from freshplaylist.models import db
 from freshplaylist.models.user import User
+from freshplaylist.models.token import Token
 
 
-auth_bp = Blueprint('auth_bp', __name__)
+auth_bp = Blueprint('auth_bp', __name__, url_prefix='/login')
 
 
 oauth = OAuth(auth_bp)
@@ -37,7 +38,7 @@ def get_spotify_user_token():
     return None
 
 
-@auth_bp.route('/login')
+@auth_bp.route('/')
 def login():
     callback = url_for(
         'auth_bp.spotify_authorized',
@@ -46,7 +47,7 @@ def login():
     return spotify.authorize(callback=callback)
 
 
-@auth_bp.route('/login/authorized')
+@auth_bp.route('/authorized')
 def spotify_authorized():
     resp = spotify.authorized_response()
     if resp is None:

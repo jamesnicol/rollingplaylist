@@ -2,7 +2,7 @@ import os
 import tempfile
 import pytest
 from freshplaylist.models import db as _db
-from freshplaylist_factory import create_app
+from freshplaylist.factory import create_app
 
 # from http://alexmic.net/flask-sqlalchemy-pytest/
 

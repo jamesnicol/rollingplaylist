@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <style>
     body,
     h1,
@@ -38,7 +39,7 @@
     /* First image (Logo. Full height) */
 
     .bgimg-1 {
-        background-image: url('./cover_img.jpg');
+        background-image: url('./static/cover_img.jpg');
         min-height: 50%;
     }
 
@@ -88,6 +89,7 @@
                 <i class="fa fa-user"></i> ABOUT</a>
             <a href="/#playlist" class="w3-bar-item w3-button w3-hide-small">
                 <i class="fa fa-book"></i> PLAYLIST</a>
+            <a href="{{url_for('auth_bp.login')}}" class="w3-bar-item w3-button w3-right w3-hide-small">
             <a href="/login" class="w3-bar-item w3-button w3-right w3-hide-small">
                 <i class="fa fa-sign-in"></i> LOGIN</a>
         </div>
