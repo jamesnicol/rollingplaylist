@@ -72,5 +72,5 @@ def get_client_token():
     payload = {"grant_type": "client_credentials",
                "client_id": spotify.consumer_key,
                "client_secret": spotify.consumer_secret}
-    resp = requests.post(spotify.access_token_url, data=payload, json=True)
+    resp = requests.post(spotify.access_token_url, data=payload)
     return json.loads(resp.text)['access_token']

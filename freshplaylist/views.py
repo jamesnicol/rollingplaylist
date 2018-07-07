@@ -17,6 +17,17 @@ main_bp = Blueprint('main_bp', __name__)
 def index():
     return render_template('base.html')
 
+@main_bp.route('/nop')
+def test_create_song():
+    sng = Song("No place", "No place", "Rufus")
+    db.session.add(sng)
+    db.session.commit()
+    return ''
+
+@main_bp.route('/getid')
+def test_get_song_id():
+    sng = db.session.query(Song).filter(Song.title == "No place").first()
+    return sng.get_id()
 
 @main_bp.route('/info/playlists')
 def get_playlists():

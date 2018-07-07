@@ -1,3 +1,4 @@
+import urllib.parse
 from freshplaylist.models import db
 from freshplaylist.auth import spotify
 from freshplaylist.auth.routes import get_current_user
@@ -22,16 +23,16 @@ class Song(db.Model):
         )
 
     def get_id(self):
-        tracks = []
-        query = 'track:"{}" artist:"{}"'.format(self.title, self.artists)
+        query = 'title:{} artist:{}'.format(self.title, self.artists)
         query = query.replace(",", "")
-        query = query.replace(" ", "%20")
         params = {'q': query,
                   'type': 'track',
                   'market': 'AU',
                   'limit': 1}
+
         search_url = '/v1/search'
-        tracks = spotify.get(search_url,
-                             format='json',
-                             data=params)
-        # tracks = tracks + [track for track in playlists_obj.data['items']]
+        resp = spotify.get(search_url, data=params)
+        if resp.data['tracks']['total'] < 1:
+            # could not find the track
+            return None 
+        return resp.data['tracks']['items'][0]['id']
