@@ -2,7 +2,8 @@ import os
 import datetime
 from flask import render_template, request, Blueprint, redirect, url_for
 from freshplaylist.models import db
-from freshplaylist.auth import spotify, get_current_user
+from freshplaylist.auth import spotify
+from freshplaylist.auth.routes import get_current_user
 from freshplaylist.models.user import User
 from freshplaylist.models.playlist import Playlist
 from freshplaylist.models.token import Token
@@ -28,6 +29,7 @@ def get_playlists():
 @main_bp.route('/make_rolling/<string:playlist>/<int:days_stale>/')
 def rolling_playlist(playlist, days_stale):
     # todo check if real playlist
+    # todo make post
     user = get_current_user()
     plst = next((p for p in user.playlists if p.playlist_id == playlist), None)
     if plst:
@@ -44,7 +46,7 @@ def rolling_playlist(playlist, days_stale):
     return 'successfully made rolling playlist {}'.format(playlist)
 
 
-@main_bp.route('/cull_stale_tracks/')
+@main_bp.route('/cull_stale_tracks', methods=['DELETE'])
 def cull_stale_tracks():
     playlists = db.session.query(Playlist).all()
     for p in playlists:

@@ -1,5 +1,6 @@
 from freshplaylist.models import db
-from freshplaylist.auth import spotify, get_client_token
+from freshplaylist.auth import spotify
+from freshplaylist.auth.routes import get_current_user
 
 
 class Song(db.Model):
@@ -33,4 +34,4 @@ class Song(db.Model):
         tracks = spotify.get(search_url,
                              format='json',
                              data=params)
-        tracks = tracks + [track for track in playlists_obj.data['items']]
+        # tracks = tracks + [track for track in playlists_obj.data['items']]
