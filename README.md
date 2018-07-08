@@ -1,7 +1,10 @@
-# spotify
+# Freshplaylists
+A tool to keep spotify playlists fresh
+
 ## To run
-After setting the environment variables run with   
-```flask run [-p PORT_NUM -h HOST_NAME]```
+After setting the environment variables, run with   
+```flask run [-p PORT_NUM -h HOST_NAME]```   
+note: port num and host name must match ```SERVER_NAME```
 
 
 ## Environment variables

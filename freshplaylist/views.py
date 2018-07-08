@@ -1,11 +1,11 @@
 import os
 import datetime
-from flask import render_template, request, Blueprint, redirect, url_for
+from flask import render_template, request, Blueprint, redirect
 from freshplaylist.models import db
 from freshplaylist.auth import spotify
 from freshplaylist.auth.routes import get_current_user
 from freshplaylist.models.user import User
-from freshplaylist.models.playlist import Playlist
+from freshplaylist.models.playlist import FreshPlaylist
 from freshplaylist.models.token import Token
 from freshplaylist.models.song import Song
 from freshplaylist import hit_scrape
@@ -17,17 +17,6 @@ main_bp = Blueprint('main_bp', __name__)
 def index():
     return render_template('base.html')
 
-@main_bp.route('/nop')
-def test_create_song():
-    sng = Song("No place", "No place", "Rufus")
-    db.session.add(sng)
-    db.session.commit()
-    return ''
-
-@main_bp.route('/getid')
-def test_get_song_id():
-    sng = db.session.query(Song).filter(Song.title == "No place").first()
-    return sng.get_id()
 
 @main_bp.route('/info/playlists')
 def get_playlists():
@@ -50,16 +39,16 @@ def rolling_playlist(playlist, days_stale):
             '/v1/users/{}/playlists/{}'.format(user.spotify_id, playlist))
         if playlists_obj.status != 200:
             return "playlist not owned by user"
-        plst = Playlist(user, playlist, days_stale)
+        plst = FreshPlaylist(user, playlist, days_stale)
         user.playlists.append(plst)
     db.session.commit()
 
-    return 'successfully made rolling playlist {}'.format(playlist)
+    return 'successfully made fresh playlist {}'.format(playlist)
 
 
 @main_bp.route('/cull_stale_tracks', methods=['DELETE'])
 def cull_stale_tracks():
-    playlists = db.session.query(Playlist).all()
+    playlists = db.session.query(FreshPlaylist).all()
     for p in playlists:
         p.cull_tracks()
     return "culled tracks"
@@ -67,26 +56,23 @@ def cull_stale_tracks():
 
 @main_bp.route('/create_rolling_playlist', methods=['POST'])
 def new_rolling_playlist():
+    message = ''
     try:
-        if request.method == 'POST':
-            user = get_current_user()
-            if user is None:
-                return render_template('bigmessage.html',
-                                       message="PLEASE LOGIN")
-            params = {'name': request.form['playlist_name']}
-            create_playlist_url = '/v1/users/{}/playlists'.format(
-                user.spotify_id)
-            resp = spotify.post(create_playlist_url,
-                                data=params, format='json')
-            p_id = resp.data['id']
-            plst = Playlist(user, p_id, request.form['days_stale'])
-            user.playlists.append(plst)
+        user = get_current_user()
+        if user is None:
+            message = "PLEASE LOGIN"
+        else:
+            plst_name = request.form['playlist_name']
+            days_stale = request.form['days_stale']
+            plst = FreshPlaylist.new_spotify_playlist(user, plst_name,
+                                                      days_stale)
+            db.session.add(plst)
             db.session.commit()
+            message = "CREATED NEW PLAYLIST"
     except Exception as e:
         print(e)
-        return render_template('bigmessage.html',
-                               message="OOPS! SOMETHING WENT WRONG")
-    return render_template('bigmessage.html', message="CREATED NEW PLAYLIST")
+        message = "OOPS! SOMETHING WENT WRONG"
+    return render_template('bigmessage.html', message=message)
 
 
 @main_bp.route('/hit_list')

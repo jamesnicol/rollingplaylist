@@ -7,7 +7,8 @@ from freshplaylist.auth.routes import get_current_user
 class Song(db.Model):
     __tablename__ = 'songs'
     id = db.Column(db.Integer, db.Sequence('song_id_seq'), primary_key=True)
-    song_id = db.Column(db.String, unique=True)  # the spotify id of the song
+    # the spotify id of the song
+    spotify_uri = db.Column(db.String, unique=True)
     title = db.Column(db.String)
     album = db.Column(db.String)
     artists = db.Column(db.String)
@@ -18,14 +19,9 @@ class Song(db.Model):
         self.artists = artists
         self.get_id()
 
-    def __repr__(self):
-        return "Title: {}, artist(s): {} , album: {}\n".format(
-            self.title, self.album, self.artists
-        )
-
     def get_id(self):
-        if self.song_id is not None:
-            return self.song_id
+        if self.spotify_uri is not None:
+            return self.spotify_uri
         query = 'title:{} artist:{}'.format(self.title, self.artists)
         query = query.replace(",", "")
         params = {'q': query,
@@ -37,8 +33,36 @@ class Song(db.Model):
         resp = spotify.get(search_url, data=params)
         if resp.status != 200 or resp.data['tracks']['total'] < 1:
             # could not find the track
-            self.song_id = None
+            self.spotify_uri = None
         else:
-            self.song_id = resp.data['tracks']['items'][0]['id']
+            self.spotify_uri = resp.data['tracks']['items'][0]['uri']
         db.session.commit()
-        return self.song_id
+        return self.spotify_uri
+
+    @classmethod
+    def get_song(title, artists, album):
+        sng = db.session.query(Song).\
+            filter(Song.title == title).\
+            filter(Song.artists == artists).\
+            filter(Song.album == album).\
+            first()
+        return sng
+
+    def __repr__(self):
+        return "Title: {}, artist(s): {} , album: {}\n".format(
+            self.title, self.album, self.artists
+        )
+
+    def __eq__(self, other):
+        if self.spotify_uri and other.spotify_uri:
+            return self.spotify_uri == other.spotify_uri
+        if self.title != other.title:
+            return False
+        if self.album != other.album:
+            return False
+        if self.artists != other.artists:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
