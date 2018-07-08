@@ -17,7 +17,7 @@ class Song(db.Model):
         self.title = title
         self.album = album
         self.artists = artists
-        self.get_id()
+        # self.get_id()
 
     def get_id(self):
         if self.spotify_uri is not None:
@@ -40,7 +40,7 @@ class Song(db.Model):
         return self.spotify_uri
 
     @classmethod
-    def get_song(title, artists, album):
+    def get_song(cls, title, artists, album):
         sng = db.session.query(Song).\
             filter(Song.title == title).\
             filter(Song.artists == artists).\
@@ -49,8 +49,8 @@ class Song(db.Model):
         return sng
 
     def __repr__(self):
-        return "Title: {}, artist(s): {} , album: {}\n".format(
-            self.title, self.album, self.artists
+        return "Title: {}, artist(s): {} , album: {}, uri: {}\n".format(
+            self.title, self.album, self.artists, self.spotify_uri
         )
 
     def __eq__(self, other):

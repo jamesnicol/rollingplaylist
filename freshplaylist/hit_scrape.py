@@ -4,29 +4,27 @@ import json
 from freshplaylist.auth import spotify
 from freshplaylist.models.playlist import FollowPlaylist
 from freshplaylist.models.song import Song
+from freshplaylist.models import db
 
 FOLLOW_TYPE = 'triple_j_hitlist'
+HITLIST_URL = 'https://music.abcradio.net.au/api/v1/recordings/plays.json'
 
 
 def subscribe(user, name="Triple j Hitlist"):
     plst = FollowPlaylist.new_spotify_playlist(user, FOLLOW_TYPE, name)
-    return
+    songs = add_hl_songs_to_db()
+    plst.update(songs)
 
 
 def update_all():
-    songs = get_hit_list_songs()
+    songs = add_hl_songs_to_db()
     playlists = db.session.query(FollowPlaylist).\
         filter(FollowPlaylist.following == FOLLOW_TYPE)
     for p in playlists:
         p.update(songs)
 
 
-def update_playlist(songs, plst):
-
-    return
-
-
-def get_hit_list_songs():
+def add_hl_songs_to_db():
     songs = get_hit_list_data()
     res = []
     for s in songs:
@@ -39,7 +37,7 @@ def get_hit_list_songs():
 
         sng = Song.get_song(title, artists, album)
         if sng is None:
-            sng = Song(s.title, s.artists, s.album)
+            sng = Song(title, artists, album)
             if sng.spotify_uri is not None:
                 # could not get spotify uri
                 continue
@@ -59,9 +57,7 @@ def get_hit_list_data():
                 'from': last_week.strftime('%Y-%m-%dT%H:%M:%SZ'),
                 'to': today.strftime('%Y-%m-%dT%H:%M:%SZ')}
 
-    hit_html = requests.get(
-        'https://music.abcradio.net.au/api/v1/recordings/plays.json',
-        params=q_params)
+    hit_html = requests.get(HITLIST_URL, params=q_params)
 
     data = json.loads(hit_html.text)
     return data['items']
