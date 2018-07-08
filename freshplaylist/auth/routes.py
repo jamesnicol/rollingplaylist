@@ -1,13 +1,19 @@
 import requests
+import os
 import json
-from flask import session, url_for, request, redirect
+import pickle
+from datetime import datetime, timedelta
+from flask import session, url_for, request, redirect, current_app
 from flask_oauthlib.client import OAuthException
+import freshplaylist
 from freshplaylist.models import db
 from freshplaylist.models.user import User
 from freshplaylist.models.token import Token
 from freshplaylist.auth import spotify, auth_bp
 
-
+SPOTIFY_TOKEN_FILENAME = 'data/spotify.bin'
+SPOTIFY_TOKEN_PATH = os.path.join(os.path.dirname(freshplaylist.__file__), 
+                                                  SPOTIFY_TOKEN_FILENAME)
 @auth_bp.route('/')
 def login():
     callback = url_for(
@@ -69,8 +75,23 @@ def get_current_user():
 
 
 def get_client_token():
-    payload = {"grant_type": "client_credentials",
-               "client_id": spotify.consumer_key,
-               "client_secret": spotify.consumer_secret}
-    resp = requests.post(spotify.access_token_url, data=payload)
-    return json.loads(resp.text)['access_token']
+    try:
+        with open(SPOTIFY_TOKEN_PATH, 'rb') as fd:
+            token_d = pickle.load(fd)
+    except IOError:
+        token_d = {}
+    if not token_d or token_d['expires'] < datetime.now():
+        payload = {"grant_type": "client_credentials",
+                   "client_id": spotify.consumer_key,
+                   "client_secret": spotify.consumer_secret}
+        resp = requests.post(spotify.access_token_url, data=payload)
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        token_d['access_token'] = data['access_token']
+        expires_in = data['expires_in']
+        if expires_in is not None:
+            token_d['expires'] = datetime.now() + timedelta(seconds=expires_in)
+        with open(SPOTIFY_TOKEN_PATH, 'wb') as fd:
+            pickle.dump(token_d, fd)
+    return token_d['access_token']

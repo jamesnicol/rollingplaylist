@@ -16,6 +16,7 @@ class Song(db.Model):
         self.title = title
         self.album = album
         self.artists = artists
+        self.get_id()
 
     def __repr__(self):
         return "Title: {}, artist(s): {} , album: {}\n".format(
@@ -23,6 +24,8 @@ class Song(db.Model):
         )
 
     def get_id(self):
+        if self.song_id is not None:
+            return self.song_id
         query = 'title:{} artist:{}'.format(self.title, self.artists)
         query = query.replace(",", "")
         params = {'q': query,
@@ -32,7 +35,10 @@ class Song(db.Model):
 
         search_url = '/v1/search'
         resp = spotify.get(search_url, data=params)
-        if resp.data['tracks']['total'] < 1:
+        if resp.status != 200 or resp.data['tracks']['total'] < 1:
             # could not find the track
-            return None 
-        return resp.data['tracks']['items'][0]['id']
+            self.song_id = None
+        else:
+            self.song_id = resp.data['tracks']['items'][0]['id']
+        db.session.commit()
+        return self.song_id

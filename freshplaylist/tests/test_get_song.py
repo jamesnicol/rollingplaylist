@@ -12,4 +12,3 @@ def test_get_song_id(db):
     sng = db.session.query(Song).filter(Song.title == "No place").first()
     sng.get_id()
     assert sng.song_id is not None
-
