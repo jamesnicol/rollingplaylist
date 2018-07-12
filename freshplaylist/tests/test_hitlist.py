@@ -24,4 +24,21 @@ def test_get_songs(db):
     assert isinstance(song, Song)
 
 
+def test_get_songs_async(db):
+    songs = add_hl_songs_to_db()[:5]
+    Song.get_ids(songs)
+    song = songs[0]
+    artist = song.artists
+    title = song.title
+    sngq = db.session.query(Song).filter(
+        Song.artists == artist, Song.title == title).first()
+    assert sngq.spotify_uri is not None
+
+
+def test_get_songs_sync(db):
+    songs = add_hl_songs_to_db()[:3]
+    for s in songs:
+        s.get_id()
+    assert True
+
 # def test_subscribe(app, db)

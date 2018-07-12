@@ -1,4 +1,6 @@
 import urllib.parse
+import asyncio
+from aiohttp import ClientSession
 import requests
 import json
 from freshplaylist.models import db
@@ -30,52 +32,56 @@ class Song(db.Model):
                   'type': 'track',
                   'market': 'AU',
                   'limit': 1}
-        headers = {'Authorization': 'Bearer ' + get_client_token(),
-                   'Content-Type': 'application/json',
-                   'Accept': 'application/json'
-                   }
-
-        search_url = spotify.base_url + '/v1/search'
-        print(search_url)
-        resp = requests.get(search_url, params=params, headers=headers)
-        data = json.loads(resp.text)
-        # search_url = '/v1/search'
-        # resp = spotify.get(search_url, data=params)
-        # if resp.status != 200 or resp.data['tracks']['total'] < 1:
-        #     # could not find the track
-        #     print("Could not find track with query:\n{}".format(query))
-        #     self.spotify_uri = None
-        if resp.status_code != 200 or data['tracks']['total'] < 1:
-            # could not find the track
-            print("Could not find track with query:\n{}".format(query))
-            self.spotify_uri = None
-        else:
-            self.spotify_uri = data['tracks']['items'][0]['uri']
-        db.session.commit()
-        return self.spotify_uri
-
-    def get_id_async(self):
-        if self.spotify_uri is not None:
-            return self.spotify_uri
-        query = 'title:{} artist:{}'.format(self.title, self.artists)
-        query = query.replace(",", "")
-        params = {'q': query,
-                  'type': 'track',
-                  'market': 'AU',
-                  'limit': 1}
-        headers = {'Authorization': get_client_token()}
-
-        search_url = spotify.base_url + '/v1/search'
-        print(search_url)
-        resp = requests.get(search_url, data=params, headers=headers)
+        search_url = '/v1/search'
+        resp = spotify.get(search_url, data=params)
         if resp.status != 200 or resp.data['tracks']['total'] < 1:
             # could not find the track
             print("Could not find track with query:\n{}".format(query))
             self.spotify_uri = None
         else:
             self.spotify_uri = resp.data['tracks']['items'][0]['uri']
+        db.session.add(self)
         db.session.commit()
         return self.spotify_uri
+
+    @classmethod
+    def get_ids(cls, sngs):
+        """asyncronously updates a list of songs spotify uris"""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(Song.start_searches(loop, sngs))
+
+    @classmethod
+    async def start_searches(cls, loop, sngs):
+        headers = {'Authorization': 'Bearer ' + get_client_token(),
+                   'Content-Type': 'application/json',
+                   'Accept': 'application/json'
+                   }
+        async with ClientSession(loop=loop, headers=headers) as session:
+            tasks = [s.search_uri(session) for s in sngs]
+            await asyncio.gather(*tasks)
+        db.session.commit()
+
+    async def search_uri(self, session):
+        if self.spotify_uri is not None:
+            return
+        query = 'title:{} artist:{}'.format(self.title, self.artists)
+        query = query.replace(",", "")
+        params = {'q': query,
+                  'type': 'track',
+                  'market': 'AU',
+                  'limit': 1}
+        search_url = spotify.base_url + '/v1/search'
+
+        async with session.get(search_url, params=params) as resp:
+
+            data = await resp.json()
+            if resp.status != 200 or data['tracks']['total'] < 1:
+                # could not find the track
+                print("Could not find track with query:\n{}".format(query))
+                self.spotify_uri = None
+            else:
+                self.spotify_uri = data['tracks']['items'][0]['uri']
+            return await resp.release()
 
     @classmethod
     def get_song(cls, title, artists, album):
