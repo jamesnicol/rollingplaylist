@@ -12,8 +12,10 @@ from freshplaylist.models.token import Token
 from freshplaylist.auth import spotify, auth_bp
 
 SPOTIFY_TOKEN_FILENAME = 'data/spotify.bin'
-SPOTIFY_TOKEN_PATH = os.path.join(os.path.dirname(freshplaylist.__file__), 
-                                                  SPOTIFY_TOKEN_FILENAME)
+SPOTIFY_TOKEN_PATH = os.path.join(os.path.dirname(freshplaylist.__file__),
+                                  SPOTIFY_TOKEN_FILENAME)
+
+
 @auth_bp.route('/')
 def login():
     callback = url_for(

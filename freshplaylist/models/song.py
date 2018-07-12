@@ -1,7 +1,9 @@
 import urllib.parse
+import requests
+import json
 from freshplaylist.models import db
 from freshplaylist.auth import spotify
-from freshplaylist.auth.routes import get_current_user
+from freshplaylist.auth.routes import get_current_user, get_client_token
 
 
 class Song(db.Model):
@@ -13,7 +15,7 @@ class Song(db.Model):
     album = db.Column(db.String)
     artists = db.Column(db.String)
 
-    def __init__(self, title, album, artists):
+    def __init__(self, title, artists, album):
         self.title = title
         self.album = album
         self.artists = artists
@@ -28,11 +30,47 @@ class Song(db.Model):
                   'type': 'track',
                   'market': 'AU',
                   'limit': 1}
+        headers = {'Authorization': 'Bearer ' + get_client_token(),
+                   'Content-Type': 'application/json',
+                   'Accept': 'application/json'
+                   }
 
-        search_url = '/v1/search'
-        resp = spotify.get(search_url, data=params)
+        search_url = spotify.base_url + '/v1/search'
+        print(search_url)
+        resp = requests.get(search_url, params=params, headers=headers)
+        data = json.loads(resp.text)
+        # search_url = '/v1/search'
+        # resp = spotify.get(search_url, data=params)
+        # if resp.status != 200 or resp.data['tracks']['total'] < 1:
+        #     # could not find the track
+        #     print("Could not find track with query:\n{}".format(query))
+        #     self.spotify_uri = None
+        if resp.status_code != 200 or data['tracks']['total'] < 1:
+            # could not find the track
+            print("Could not find track with query:\n{}".format(query))
+            self.spotify_uri = None
+        else:
+            self.spotify_uri = data['tracks']['items'][0]['uri']
+        db.session.commit()
+        return self.spotify_uri
+
+    def get_id_async(self):
+        if self.spotify_uri is not None:
+            return self.spotify_uri
+        query = 'title:{} artist:{}'.format(self.title, self.artists)
+        query = query.replace(",", "")
+        params = {'q': query,
+                  'type': 'track',
+                  'market': 'AU',
+                  'limit': 1}
+        headers = {'Authorization': get_client_token()}
+
+        search_url = spotify.base_url + '/v1/search'
+        print(search_url)
+        resp = requests.get(search_url, data=params, headers=headers)
         if resp.status != 200 or resp.data['tracks']['total'] < 1:
             # could not find the track
+            print("Could not find track with query:\n{}".format(query))
             self.spotify_uri = None
         else:
             self.spotify_uri = resp.data['tracks']['items'][0]['uri']
@@ -49,8 +87,8 @@ class Song(db.Model):
         return sng
 
     def __repr__(self):
-        return "Title: {}, artist(s): {} , album: {}, uri: {}\n".format(
-            self.title, self.album, self.artists, self.spotify_uri
+        return "Song(title={}, artist={} , album={}, uri={})".format(
+            self.title, self.artists, self.album, self.spotify_uri
         )
 
     def __eq__(self, other):

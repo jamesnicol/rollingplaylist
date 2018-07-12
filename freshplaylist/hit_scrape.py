@@ -37,14 +37,20 @@ def add_hl_songs_to_db():
 
         sng = Song.get_song(title, artists, album)
         if sng is None:
-            sng = Song(title, artists, album)
-            if sng.spotify_uri is not None:
-                # could not get spotify uri
-                continue
+            sng = add_song_to_db(title, artists, album)
             db.session.add(sng)
         res.append(sng)
     db.session.commit()
     return res
+
+
+def add_song_to_db(title, artists, album):
+            sng = Song(title, artists, album)
+            # sng.get_id()
+            # if sng.spotify_uri is None:
+            #     # could not get spotify uri
+            #     return None
+            return sng
 
 
 def get_hit_list_data():

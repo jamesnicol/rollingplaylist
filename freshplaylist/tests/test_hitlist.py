@@ -16,6 +16,7 @@ def test_get_songs(db):
     assert isinstance(songs, list)
     assert len(songs) > 0
     song = songs[0]
+    assert song.id is not None
     assert song.id > 0
     song.get_id()
     print(song)
