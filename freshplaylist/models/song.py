@@ -48,7 +48,7 @@ class Song(db.Model):
     def get_ids(cls, sngs):
         """asyncronously updates a list of songs spotify uris"""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(Song.start_searches(loop, sngs))
+        loop.run_until_complete(cls.start_searches(loop, sngs))
 
     @classmethod
     async def start_searches(cls, loop, sngs):
@@ -110,3 +110,6 @@ class Song(db.Model):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.spotify_uri)

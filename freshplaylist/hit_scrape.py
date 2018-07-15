@@ -12,8 +12,10 @@ HITLIST_URL = 'https://music.abcradio.net.au/api/v1/recordings/plays.json'
 
 def subscribe(user, name="Triple j Hitlist"):
     plst = FollowPlaylist.new_spotify_playlist(user, FOLLOW_TYPE, name)
+    db.session.add(plst)
     songs = add_hl_songs_to_db()
-    plst.update(songs)
+    plst.add_songs(songs)
+    db.session.commit()
 
 
 def update_all():

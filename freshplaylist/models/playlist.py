@@ -49,6 +49,8 @@ class Playlist(db.Model):
         params = {'name': name}
         resp = spotify.post(create_playlist_url,
                             data=params, format='json')
+        if resp.status != 200:
+            return None
         p_id = resp.data['id']
         plst = cls(user, p_id)
         return plst
@@ -123,7 +125,7 @@ class FollowPlaylist(Playlist):
         'polymorphic_identity': 'follow_playlist',
     }
 
-    def __init__(self, user, following, playlist_id):
+    def __init__(self, user, playlist_id, following=None):
         self.following = following
         super(FollowPlaylist, self).__init__(user, playlist_id)
 
@@ -132,15 +134,14 @@ class FollowPlaylist(Playlist):
         adds new songs to playlist skipping duplicates\n
         :param new_songs: a list of Song objects
         """
-        songs_to_add = set(new_songs) - set(self.songs)
+        songs_to_add = list(set(new_songs) - set(self.songs))
         self.add_songs(songs_to_add)
-        self.songs += songs_to_add
 
     def add_songs(self, new_songs):
         add_tracks_url = '/v1/users/{}/playlists/{}/tracks'.format(
             self.p_user.spotify_id, self.playlist_id
         )
-        track_del_data = {
+        track_add_data = {
             'tracks': []
         }
         for i in range(0, len(new_songs), 100):
@@ -149,9 +150,10 @@ class FollowPlaylist(Playlist):
             spotify.post(add_tracks_url, data=track_add_data,
                          format='json',
                          token=(self.p_user.token.get_token(), ''))
-        return
+        self.songs += new_songs
 
     @classmethod
     def new_spotify_playlist(cls, user, following, name):
-        self.following = following
-        return super(FollowPlaylist, cls).new_spotify_playlist(user, name)
+        plst = super(FollowPlaylist, cls).new_spotify_playlist(user, name)
+        plst.following = following
+        return plst
