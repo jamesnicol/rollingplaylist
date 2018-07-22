@@ -5,10 +5,11 @@ from freshplaylist.models import db
 from freshplaylist.auth import spotify
 from freshplaylist.auth.routes import get_current_user
 from freshplaylist.models.user import User
-from freshplaylist.models.playlist import FreshPlaylist
+from freshplaylist.models.playlist import FreshPlaylist, FollowPlaylist
 from freshplaylist.models.token import Token
 from freshplaylist.models.song import Song
 from freshplaylist import hit_scrape
+
 
 main_bp = Blueprint('main_bp', __name__)
 
@@ -75,8 +76,16 @@ def new_rolling_playlist():
     return render_template('bigmessage.html', message=message)
 
 
-@main_bp.route('/hit_list')
-def show_hit_list():
-    hits = [', '.join(["= ".join([k, v]) for k, v in d.items()])
-            for d in hit_scrape.get_hit_list()]
-    return render_template('list.html', your_list=hits)
+@main_bp.route('/hit_list_subscribe')
+def subscribe_hit_list():
+    user = get_current_user()
+    hit_scrape.subscribe(user)
+    return render_template('bigmessage.html', message="Playlist Followed")
+
+
+@main_bp.route('/add_all_songs')
+def add_songs():
+    user = get_current_user()
+    plst = db.session.query(FollowPlaylist).first()
+    plst.add_songs(plst.songs)
+    return render_template('bigmessage.html', message="ADDED SONGS")

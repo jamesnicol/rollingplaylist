@@ -47,7 +47,8 @@ class Song(db.Model):
     @classmethod
     def get_ids(cls, sngs):
         """asyncronously updates a list of songs spotify uris"""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.run_until_complete(cls.start_searches(loop, sngs))
 
     @classmethod
@@ -66,14 +67,13 @@ class Song(db.Model):
             return
         query = 'title:{} artist:{}'.format(self.title, self.artists)
         query = query.replace(",", "")
+        query = query.replace("&", "")
         params = {'q': query,
                   'type': 'track',
                   'market': 'AU',
                   'limit': 1}
         search_url = spotify.base_url + '/v1/search'
-
         async with session.get(search_url, params=params) as resp:
-
             data = await resp.json()
             if resp.status != 200 or data['tracks']['total'] < 1:
                 # could not find the track

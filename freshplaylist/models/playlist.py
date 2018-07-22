@@ -36,8 +36,7 @@ class Playlist(db.Model):
             self.p_user.spotify_id, self.playlist_id
         )
         while tracks_url:
-            playlists_obj = spotify.get(tracks_url, token=(
-                self.p_user.token.get_token(), ''))
+            playlists_obj = spotify.get(tracks_url)
             tracks = tracks + [track for track in playlists_obj.data['items']]
             tracks_url = playlists_obj.data['next']
         return tracks
@@ -49,7 +48,7 @@ class Playlist(db.Model):
         params = {'name': name}
         resp = spotify.post(create_playlist_url,
                             data=params, format='json')
-        if resp.status != 200:
+        if resp.status != 200 and resp.status != 201:
             return None
         p_id = resp.data['id']
         plst = cls(user, p_id)
@@ -141,15 +140,14 @@ class FollowPlaylist(Playlist):
         add_tracks_url = '/v1/users/{}/playlists/{}/tracks'.format(
             self.p_user.spotify_id, self.playlist_id
         )
-        track_add_data = {
-            'tracks': []
-        }
+        track_add_data = {}
         for i in range(0, len(new_songs), 100):
-            track_add_data['tracks'] = [{'uri': t.spotify_uri}
-                                        for t in new_songs[i:i+100]]
-            spotify.post(add_tracks_url, data=track_add_data,
-                         format='json',
-                         token=(self.p_user.token.get_token(), ''))
+            track_add_data['uris'] = [t.spotify_uri
+                                      for t in new_songs[i:i+100]]
+            track_add_data['position'] = 0
+            resp = spotify.post(add_tracks_url, data=track_add_data,
+                                format='json')
+            print(resp)
         self.songs += new_songs
 
     @classmethod

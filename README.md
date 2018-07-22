@@ -1,8 +1,12 @@
 # Freshplaylists
 A tool to keep spotify playlists fresh
+## Setup
+1. Set the environment variables
+2. Use Python 3.6
+3. Form the project root, run:   
+```python createdb.py```
 
 ## To run
-After setting the environment variables and using Python3.6, run with   
 ```flask run [-p PORT_NUM -h HOST_NAME]```   
 note: port num and host name must match ```SERVER_NAME```
 
