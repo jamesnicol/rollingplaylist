@@ -137,13 +137,14 @@ class FollowPlaylist(Playlist):
         self.add_songs(songs_to_add)
 
     def add_songs(self, new_songs):
-        add_tracks_url = '/v1/users/{}/playlists/{}/tracks'.format(
-            self.p_user.spotify_id, self.playlist_id
+        add_tracks_url = '/v1/playlists/{}/tracks'.format(
+            self.playlist_id
         )
         track_add_data = {}
         for i in range(0, len(new_songs), 100):
             track_add_data['uris'] = [t.spotify_uri
-                                      for t in new_songs[i:i+100]]
+                                      for t in new_songs[i:i+100] 
+                                      if t.spotify_uri is not None]
             track_add_data['position'] = 0
             resp = spotify.post(add_tracks_url, data=track_add_data,
                                 format='json')

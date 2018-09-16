@@ -28,6 +28,7 @@ class Song(db.Model):
             return self.spotify_uri
         query = 'title:{} artist:{}'.format(self.title, self.artists)
         query = query.replace(",", "")
+        query = query.replace("'", " ")
         params = {'q': query,
                   'type': 'track',
                   'market': 'AU',
