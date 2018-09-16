@@ -75,7 +75,7 @@ class FreshPlaylist(Playlist):
 
     @classmethod
     def new_spotify_playlist(cls, user, name, days=0):
-        super(FreshPlaylist, cls).new_spotify_playlist(user, name)
+        return super(FreshPlaylist, cls).new_spotify_playlist(user, name)
 
     def remove_tracks(self, tracks):
         delete_tracks_url = '/v1/users/{}/playlists/{}/tracks'.format(

@@ -44,6 +44,7 @@ class Song(db.Model):
         db.session.commit()
         return self.spotify_uri
 
+    # todo: rename function
     @classmethod
     def get_ids(cls, sngs):
         """asyncronously updates a list of songs spotify uris"""
@@ -65,9 +66,10 @@ class Song(db.Model):
     async def search_uri(self, session):
         if self.spotify_uri is not None:
             return
-        query = 'title:{} artist:{}'.format(self.title, self.artists)
+        query = 'artist:{} track:{}'.format(self.artists, self.title)
         query = query.replace(",", "")
         query = query.replace("&", "")
+        # query = query.replace(" ", "+")
         params = {'q': query,
                   'type': 'track',
                   'market': 'AU',

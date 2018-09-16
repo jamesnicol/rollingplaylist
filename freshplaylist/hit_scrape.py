@@ -6,6 +6,7 @@ from freshplaylist.models.playlist import FollowPlaylist
 from freshplaylist.models.song import Song
 from freshplaylist.models import db
 
+# todo: put FOLLOW_TYPE in a common file
 FOLLOW_TYPE = 'triple_j_hitlist'
 HITLIST_URL = 'https://music.abcradio.net.au/api/v1/recordings/plays.json'
 

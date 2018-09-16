@@ -76,11 +76,11 @@ def new_rolling_playlist():
     return render_template('bigmessage.html', message=message)
 
 
-@main_bp.route('/hit_list_subscribe')
+@main_bp.route('/hit_list_subscribe', methods=['POST'])
 def subscribe_hit_list():
     user = get_current_user()
     hit_scrape.subscribe(user)
-    return render_template('bigmessage.html', message="Playlist Followed")
+    return render_template('bigmessage.html', message="PLAYLIST FOLLOWED")
 
 
 @main_bp.route('/add_all_songs')
