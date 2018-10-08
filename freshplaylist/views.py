@@ -55,6 +55,12 @@ def cull_stale_tracks():
     return "culled tracks"
 
 
+@main_bp.route('/update_hitlists', methods=['PUT'])
+def update_hitlists():
+    hit_scrape.update_all()
+    return "updated playlists"
+
+
 @main_bp.route('/create_rolling_playlist', methods=['POST'])
 def new_rolling_playlist():
     message = ''

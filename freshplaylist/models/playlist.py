@@ -125,7 +125,7 @@ class FollowPlaylist(Playlist):
     }
 
     def __init__(self, user, playlist_id, following=None):
-        self.following = following
+        self.following = following  # todo: make db column
         super(FollowPlaylist, self).__init__(user, playlist_id)
 
     def update(self, new_songs):
@@ -143,7 +143,7 @@ class FollowPlaylist(Playlist):
         track_add_data = {}
         for i in range(0, len(new_songs), 100):
             track_add_data['uris'] = [t.spotify_uri
-                                      for t in new_songs[i:i+100] 
+                                      for t in new_songs[i:i+100]
                                       if t.spotify_uri is not None]
             track_add_data['position'] = 0
             resp = spotify.post(add_tracks_url, data=track_add_data,

@@ -12,3 +12,4 @@ freshplaylist/data/
 *.db
 *.db-journal
 .pytest_cache/
+migrations/
