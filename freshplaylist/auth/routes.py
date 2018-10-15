@@ -11,9 +11,7 @@ from freshplaylist.models.user import User
 from freshplaylist.models.token import Token
 from freshplaylist.auth import spotify, auth_bp
 
-SPOTIFY_TOKEN_FILENAME = 'data/spotify.bin'
-SPOTIFY_TOKEN_PATH = os.path.join(os.path.dirname(freshplaylist.__file__),
-                                  SPOTIFY_TOKEN_FILENAME)
+SPOTIFY_TOKEN_PATH = os.environ.get('TOKEN_LOCATION')
 
 
 @auth_bp.route('/')
@@ -94,6 +92,6 @@ def get_client_token():
         expires_in = data['expires_in']
         if expires_in is not None:
             token_d['expires'] = datetime.now() + timedelta(seconds=expires_in)
-        with open(SPOTIFY_TOKEN_PATH, 'wb+') as fd:
+        with open(SPOTIFY_TOKEN_PATH, 'wb') as fd:
             pickle.dump(token_d, fd)
     return token_d['access_token']
