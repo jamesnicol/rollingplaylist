@@ -10,7 +10,7 @@ from freshplaylist.auth.routes import get_current_user, get_client_token
 
 class Song(db.Model):
     __tablename__ = 'songs'
-    id = db.Column(db.Integer, db.Sequence('song_id_seq'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     # the spotify id of the song
     spotify_uri = db.Column(db.String, unique=True)
     title = db.Column(db.String)

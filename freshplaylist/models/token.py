@@ -6,7 +6,7 @@ from freshplaylist.auth import spotify
 
 class Token(db.Model):
     __tablename__ = 'tokens'
-    id = db.Column(db.Integer, db.Sequence('token_id_seq'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     access_token = db.Column(db.String)
     refresh_token = db.Column(db.String)
     expires = db.Column(db.DateTime)
