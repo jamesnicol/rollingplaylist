@@ -94,6 +94,6 @@ def get_client_token():
         expires_in = data['expires_in']
         if expires_in is not None:
             token_d['expires'] = datetime.now() + timedelta(seconds=expires_in)
-        with open(SPOTIFY_TOKEN_PATH, 'wb') as fd:
+        with open(SPOTIFY_TOKEN_PATH, 'wb+') as fd:
             pickle.dump(token_d, fd)
     return token_d['access_token']
