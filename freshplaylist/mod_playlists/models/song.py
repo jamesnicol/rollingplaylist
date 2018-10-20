@@ -1,11 +1,12 @@
+import json
+import requests
 import urllib.parse
 import asyncio
 from aiohttp import ClientSession
-import requests
-import json
-from freshplaylist.models import db
-from freshplaylist.auth import spotify
-from freshplaylist.auth.routes import get_current_user, get_client_token
+from freshplaylist import db
+from freshplaylist.mod_auth import spotify
+from freshplaylist.mod_auth.controllers import get_current_user
+from freshplaylist.mod_auth.controllers import get_client_token
 
 
 class Song(db.Model):
@@ -21,7 +22,6 @@ class Song(db.Model):
         self.title = title
         self.album = album
         self.artists = artists
-        # self.get_id()
 
     def get_id(self):
         if self.spotify_uri is not None:
@@ -70,7 +70,7 @@ class Song(db.Model):
         query = 'artist:{} track:{}'.format(self.artists, self.title)
         query = query.replace(",", "")
         query = query.replace("&", "")
-        # query = query.replace(" ", "+")
+        query = query.replace("'", "")
         params = {'q': query,
                   'type': 'track',
                   'market': 'AU',

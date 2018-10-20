@@ -3,11 +3,11 @@ A tool to keep spotify playlists fresh
 ## Setup
 1. Set the environment variables
 2. Use Python 3.6
-3. Form the project root, run:   
-```python createdb.py```
+3. Form the project root, run:  
+```python managedb.py db upgrade```
 
 ## To run
-```flask run [-p PORT_NUM -h HOST_NAME]```   
+```flask run [-p PORT_NUM -h HOST_NAME]```  
 note: port num and host name must match ```SERVER_NAME```
 
 

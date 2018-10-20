@@ -89,7 +89,7 @@ body, html {
   <p class="w3-center"><em>Everyday we'll get the most played songs on tripple
     j and put them in a playlist for you. Just delete the ones you don't like.
   </em></p>
-  <form method='POST' action='/hit_list_subscribe'>
+  <form method='POST' action='/playlist/hit_list_subscribe'>
     <button class="w3-button w3-black w3-right w3-section" type="submit">
       <i class="fa fa-paper-plane"></i> SUBSCRIBE
     </button>
@@ -105,7 +105,7 @@ body, html {
     </div>
     <div class="w3-col m8 w3-panel">
       <p> Login, then enter a playlist name and expiration period in days and it'll do the rest</p>
-      <form method="POST" action="/create_rolling_playlist">
+      <form method="POST" action="/playlist/create_rolling_playlist">
         <div class="w3-row-padding" style="margin:0 -16px 8px -16px">
           <div class="w3-half">
             <input class="w3-input w3-border" type="text" placeholder="Playlist Name" required name="playlist_name">

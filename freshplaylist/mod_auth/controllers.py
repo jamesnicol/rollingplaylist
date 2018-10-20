@@ -3,13 +3,12 @@ import os
 import json
 import pickle
 from datetime import datetime, timedelta
-from flask import session, url_for, request, redirect, current_app
+from flask import session, url_for, request, redirect
 from flask_oauthlib.client import OAuthException
-import freshplaylist
-from freshplaylist.models import db
-from freshplaylist.models.user import User
-from freshplaylist.models.token import Token
-from freshplaylist.auth import spotify, auth_bp
+from freshplaylist import db
+from mod_auth import spotify, auth_bp
+from mod_auth.models.user import User
+from mod_auth.models.token import Token
 
 SPOTIFY_TOKEN_PATH = os.environ.get('TOKEN_LOCATION')
 

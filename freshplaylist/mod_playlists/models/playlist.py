@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from freshplaylist.models import db
-from freshplaylist.auth import spotify
-from freshplaylist.models.song import Song
+from freshplaylist import db
+from freshplaylist.mod_auth import spotify
+from mod_playlists.song import Song
 
 belongs_to = db.Table('belongs_to',
                       db.Column('song_id', db.Integer, db.ForeignKey(

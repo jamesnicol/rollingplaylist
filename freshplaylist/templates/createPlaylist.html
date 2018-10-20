@@ -1,4 +1,4 @@
-<form method="POST" action="/create_rolling_playlist">
+<form method="POST" action="/playlist/create_rolling_playlist">
     {{ form.csrf_token }}
     {{ form.playlist_name.label }} {{ form.playlist_name(size=20) }}
     {{ form.stale_days.label }} {{ form.stale_days(size=4) }}

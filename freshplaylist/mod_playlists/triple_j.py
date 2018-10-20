@@ -1,10 +1,10 @@
 import requests
 import datetime
 import json
-from freshplaylist.auth import spotify
-from freshplaylist.models.playlist import FollowPlaylist
-from freshplaylist.models.song import Song
-from freshplaylist.models import db
+from freshplaylist import db
+from freshplaylist.mod_auth import spotify
+from mod_playlists.playlist import FollowPlaylist
+from mod_playlists.song import Song
 
 # todo: put FOLLOW_TYPE in a common file
 FOLLOW_TYPE = 'triple_j_hitlist'

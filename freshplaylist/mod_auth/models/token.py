@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import requests
-from freshplaylist.models import db
-from freshplaylist.auth import spotify
+from freshplaylist import db
+from mod_auth import spotify
 
 
 class Token(db.Model):
